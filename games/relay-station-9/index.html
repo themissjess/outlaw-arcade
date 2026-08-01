@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relay Station 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0A0E1A;
+    --steel:#161D2E;
+    --steel-light:#232D45;
+    --amber:#FFB627;
+    --amber-dim:#8A6A1E;
+    --oxide:#D64933;
+    --paper:#E8DFC8;
+    --fog:#6B7A8F;
+    --font-mono:'Special Elite', 'Courier New', Consolas, monospace;
+    --font-head:'Oswald', 'Arial Narrow', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--void);}
+  body{
+    font-family:var(--font-mono);
+    color:var(--paper);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow-x:hidden;
+    padding:16px;
+  }
+  #app{
+    position:relative;
+    width:100%;
+    max-width:880px;
+    background:var(--steel);
+    border:1px solid #303c58;
+    border-radius:10px;
+    box-shadow:0 0 0 1px #000, 0 20px 60px rgba(0,0,0,0.6), inset 0 0 80px rgba(0,0,0,0.5);
+    overflow:hidden;
+  }
+  .scanlines{
+    pointer-events:none;
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.035) 0px,
+      rgba(255,255,255,0.035) 1px,
+      transparent 2px,
+      transparent 3px
+    );
+    z-index:50;
+    mix-blend-mode:overlay;
+  }
+  .vignette{
+    pointer-events:none;
+    position:absolute;inset:0;
+    box-shadow:inset 0 0 120px 40px rgba(0,0,0,0.65);
+    z-index:49;
+  }
+  .grain-flicker{
+    animation:flicker 6s infinite;
+  }
+  @keyframes flicker{
+    0%,100%{opacity:1;}
+    92%{opacity:1;}
+    93%{opacity:0.88;}
+    94%{opacity:1;}
+    95%{opacity:0.93;}
+    96%{opacity:1;}
+  }
+  .shake{ animation: shakeAnim 0.35s; }
+  @keyframes shakeAnim{
+    0%{transform:translate(0,0);}
+    20%{transform:translate(-3px,2px);}
+    40%{transform:translate(3px,-2px);}
+    60%{transform:translate(-2px,-1px);}
+    80%{transform:translate(2px,1px);}
+    100%{transform:translate(0,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .grain-flicker, .shake{ animation:none !important; }
+  }
+
+  /* ---------- Title screen ---------- */
+  #screen-title{
+    padding:56px 36px 44px;
+    text-align:center;
+    position:relative;
+    z-index:5;
+  }
+  .eyebrow{
+    font-family:var(--font-head);
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--oxide);
+    font-weight:600;
+    margin-bottom:18px;
+  }
+  h1.station-title{
+    font-family:var(--font-head);
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    font-size:44px;
+    margin:0 0 6px;
+    color:var(--amber);
+    text-shadow:0 0 18px rgba(255,182,39,0.45), 0 0 2px rgba(255,182,39,0.8);
+  }
+  .subtitle{
+    font-family:var(--font-head);
+    color:var(--fog);
+    letter-spacing:0.08em;
+    font-size:13px;
+    text-transform:uppercase;
+    margin-bottom:28px;
+  }
+  .lede{
+    max-width:520px;
+    margin:0 auto 34px;
+    line-height:1.7;
+    color:var(--paper);
+    font-size:15px;
+  }
+  .power-btn{
+    font-family:var(--font-head);
+    background:linear-gradient(180deg,var(--amber),#c98f13);
+    color:#1a1200;
+    border:none;
+    padding:16px 38px;
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    border-radius:4px;
+    cursor:pointer;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 8px 24px rgba(255,182,39,0.25);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .power-btn:hover{ transform:translateY(-1px); box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 10px 28px rgba(255,182,39,0.4); }
+  .power-btn:active{ transform:translateY(1px); }
+  .power-btn:focus-visible, button:focus-visible, input:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+  .footnote{
+    margin-top:22px;
+    font-family:var(--font-head);
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--fog);
+    text-transform:uppercase;
+  }
+  .callsign-row{ margin-bottom:14px; }
+  .callsign-label{
+    display:block; font-family:var(--font-head); font-size:11px;
+    letter-spacing:0.12em; color:var(--fog); text-transform:uppercase; margin-bottom:8px;
+  }
+  .callsign-input{
+    max-width:280px; margin:0 auto; text-align:center; text-transform:uppercase; display:block;
+  }
+  .roster{
+    display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:20px; min-height:1px;
+  }
+  .roster-label{
+    width:100%; font-family:var(--font-head); font-size:10px; letter-spacing:0.1em;
+    color:var(--fog); text-transform:uppercase; margin-bottom:4px;
+  }
+  .chip{
+    font-family:var(--font-head); font-size:11px; letter-spacing:0.06em;
+    background:var(--steel-light); border:1px solid #37415c; color:var(--paper);
+    padding:6px 14px; border-radius:14px; cursor:pointer; text-transform:uppercase;
+  }
+  .chip:hover{ border-color:var(--amber); color:var(--amber); }
+  .callsign-error{
+    color:var(--oxide); font-family:var(--font-head); font-size:11px;
+    letter-spacing:0.06em; text-transform:uppercase; min-height:14px; margin-top:10px;
+  }
+  .operator-tag{
+    font-family:var(--font-head); font-size:10px; letter-spacing:0.1em;
+    color:var(--fog); text-transform:uppercase; white-space:nowrap;
+  }
+  .operator-tag b{ color:var(--amber); font-weight:normal; }
+
+  /* ---------- Game shell ---------- */
+  #screen-game{ position:relative; z-index:5; }
+  .statusbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    background:#10152280;
+    border-bottom:1px solid #2b3550;
+    padding:12px 18px;
+    font-family:var(--font-head);
+  }
+  .status-group{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .dots{ display:flex; gap:6px; }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#37415c;
+    box-shadow:inset 0 0 2px #000;
+  }
+  .dot.done{ background:var(--amber); box-shadow:0 0 8px rgba(255,182,39,0.7); }
+  .dot.current{ background:var(--paper); box-shadow:0 0 8px rgba(232,223,200,0.8); }
+  .clock{
+    font-size:12px;letter-spacing:0.12em;color:var(--fog);text-transform:uppercase;
+  }
+  .integrity{ display:flex; align-items:center; gap:6px; }
+  .integrity-label{ font-size:10px; letter-spacing:0.1em; color:var(--fog); text-transform:uppercase; }
+  .bars{ display:flex; gap:3px; }
+  .bar{ width:7px; height:14px; background:#37415c; border-radius:1px; }
+  .bar.on{ background:var(--amber); box-shadow:0 0 6px rgba(255,182,39,0.6); }
+  .bar.critical.on{ background:var(--oxide); box-shadow:0 0 6px rgba(214,73,51,0.7); }
+  .iconbtn{
+    background:none;border:1px solid #37415c;color:var(--fog);
+    width:28px;height:28px;border-radius:4px;cursor:pointer;
+    font-size:13px; display:flex;align-items:center;justify-content:center;
+  }
+  .iconbtn:hover{ border-color:var(--amber); color:var(--amber); }
+
+  .crt-viewport{
+    position:relative;
+    min-height:340px;
+    padding:26px 26px 10px;
+  }
+  #scope{
+    position:absolute;
+    left:0;right:0;top:0;
+    width:100%;height:70px;
+    opacity:0.5;
+  }
+  #chapter-content{
+    position:relative;
+    z-index:2;
+    padding-top:6px;
+  }
+  .ch-eyebrow{
+    font-family:var(--font-head);
+    color:var(--oxide);
+    font-size:11px;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  .ch-title{
+    font-family:var(--font-head);
+    color:var(--amber);
+    font-size:22px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    font-weight:700;
+    margin:0 0 14px;
+  }
+  .ch-body{
+    line-height:1.75;
+    font-size:15px;
+    color:var(--paper);
+    max-width:640px;
+    margin-bottom:20px;
+  }
+  .ch-body b{ color:var(--amber); font-weight:normal; }
+  .panel{
+    background:#0c1220;
+    border:1px solid #2b3550;
+    border-radius:6px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .cipher-text{
+    font-size:20px;
+    letter-spacing:0.12em;
+    color:var(--oxide);
+    word-spacing:0.3em;
+    text-align:center;
+    padding:10px 0;
+  }
+  .decode-preview{
+    font-size:20px;
+    letter-spacing:0.12em;
+    color:var(--amber);
+    word-spacing:0.3em;
+    text-align:center;
+    padding:10px 0;
+    min-height:32px;
+    text-shadow:0 0 10px rgba(255,182,39,0.35);
+  }
+  .decode-preview.locked{ color:#8fffb0; text-shadow:0 0 12px rgba(143,255,176,0.55); }
+  input[type=range]{ width:100%; accent-color:var(--amber); }
+  .shift-readout{ text-align:center; font-family:var(--font-head); font-size:11px; color:var(--fog); letter-spacing:0.1em; margin-top:6px; }
+  .lock-btn{
+    display:block;margin:14px auto 0;
+    font-family:var(--font-head);
+    background:transparent;
+    border:1px solid var(--amber-dim);
+    color:#6b5a24;
+    padding:10px 26px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    font-size:12px;
+    border-radius:4px;
+    cursor:not-allowed;
+    transition:all 0.15s ease;
+  }
+  .lock-btn.enabled{
+    color:#1a1200;
+    background:var(--amber);
+    border-color:var(--amber);
+    cursor:pointer;
+    box-shadow:0 0 16px rgba(255,182,39,0.4);
+  }
+
+  .scanner-target{
+    text-align:center; font-family:var(--font-head); letter-spacing:0.1em;
+    font-size:12px; color:var(--fog); text-transform:uppercase; margin-bottom:10px;
+  }
+  .scanner-target span{ color:var(--amber); font-size:20px; vertical-align:middle; }
+  .scanner-display{
+    height:90px; display:flex; align-items:center; justify-content:center;
+    font-size:52px; color:var(--amber); text-shadow:0 0 20px rgba(255,182,39,0.5);
+  }
+  .scanner-hint{ text-align:center; color:var(--fog); font-size:11px; font-family:var(--font-head); letter-spacing:0.08em; text-transform:uppercase; }
+
+  .input-row{
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;
+  }
+  .terminal-input{
+    flex:1; min-width:160px;
+    background:#0c1220;
+    border:1px solid #37415c;
+    color:var(--amber);
+    font-family:var(--font-mono);
+    font-size:16px;
+    letter-spacing:0.08em;
+    padding:12px 14px;
+    border-radius:4px;
+  }
+  .terminal-input::placeholder{ color:#4a5678; }
+  .btn{
+    font-family:var(--font-head);
+    background:var(--amber);
+    color:#1a1200;
+    border:none;
+    padding:12px 22px;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    font-size:12px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .btn.ghost{
+    background:transparent;
+    border:1px solid #37415c;
+    color:var(--fog);
+  }
+  .btn.ghost:hover{ border-color:var(--amber); color:var(--amber); }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .feedback{
+    margin-top:12px; font-family:var(--font-head); font-size:12px;
+    letter-spacing:0.06em; text-transform:uppercase; min-height:16px;
+  }
+  .feedback.bad{ color:var(--oxide); }
+  .feedback.good{ color:#8fffb0; }
+
+  .hint-box{
+    margin-top:10px; padding:10px 14px; border-left:2px solid var(--amber-dim);
+    background:rgba(255,182,39,0.06); font-size:13px; color:var(--fog); display:none;
+  }
+  .hint-box.show{ display:block; }
+
+  .pads{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:8px 0 6px;
+  }
+  .pad{
+    height:64px; border-radius:6px; border:1px solid #37415c;
+    background:var(--steel-light);
+    font-family:var(--font-head); color:var(--fog); letter-spacing:0.08em;
+    font-size:11px; text-transform:uppercase; cursor:pointer;
+  }
+  .pad.lit{ background:var(--amber); color:#1a1200; box-shadow:0 0 22px rgba(255,182,39,0.6); border-color:var(--amber); }
+  .pad.bad{ background:var(--oxide); color:#1a0400; border-color:var(--oxide); }
+  .round-readout{
+    text-align:center; font-family:var(--font-head); font-size:12px;
+    letter-spacing:0.1em; color:var(--fog); text-transform:uppercase; margin-bottom:8px;
+  }
+  .timerbar-track{ height:5px; background:#0c1220; border-radius:3px; overflow:hidden; margin-top:10px; }
+  .timerbar-fill{ height:100%; background:var(--amber); width:100%; }
+
+  .countdown{
+    text-align:center; font-family:var(--font-head); font-weight:700;
+    font-size:38px; color:var(--oxide); letter-spacing:0.06em;
+    text-shadow:0 0 18px rgba(214,73,51,0.5); margin-bottom:10px;
+  }
+
+  .archive-strip{
+    border-top:1px solid #2b3550;
+    padding:8px 18px;
+    font-family:var(--font-head);
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:var(--fog);
+    text-transform:uppercase;
+    min-height:16px;
+  }
+  .archive-strip b{ color:var(--amber); }
+
+  /* ---------- End screen ---------- */
+  #screen-end{
+    padding:52px 36px;
+    text-align:center;
+    position:relative;
+    z-index:5;
+  }
+  .end-title{
+    font-family:var(--font-head); color:var(--amber); font-size:32px;
+    text-transform:uppercase; letter-spacing:0.08em; font-weight:700; margin-bottom:18px;
+    text-shadow:0 0 18px rgba(255,182,39,0.4);
+  }
+  .end-body{
+    max-width:520px; margin:0 auto 26px; line-height:1.8; font-size:15px; color:var(--paper);
+  }
+  .stats{
+    display:flex; justify-content:center; gap:26px; margin-bottom:30px; flex-wrap:wrap;
+    font-family:var(--font-head);
+  }
+  .stat{ text-align:center; }
+  .stat .num{ color:var(--amber); font-size:20px; font-weight:700; display:block; }
+  .stat .lbl{ color:var(--fog); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; }
+
+  @media (max-width:600px){
+    h1.station-title{ font-size:32px; }
+    .crt-viewport{ padding:18px 16px 6px; }
+    .pads{ gap:8px; }
+    .pad{ height:56px; font-size:10px; }
+    .input-row{ flex-direction:column; align-items:stretch; }
+    .terminal-input{ width:100%; }
+  }
+</style>
+<script src="../shared/arcade-client.js"></script>
+</head>
+<body>
+<div id="app" class="grain-flicker">
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <!-- TITLE SCREEN -->
+  <div id="screen-title">
+    <div class="eyebrow">Emergency Field Terminal — Do Not Power Down</div>
+    <h1 class="station-title">Relay Station 9</h1>
+    <div class="subtitle">Blackfern Ridge · Elevation 6,204 ft · Off the grid since 1987</div>
+    <div class="lede">
+      The station's been dark for decades. Something in the archive still wants to be heard.
+      Restore the terminal, decode what's left, and find out why Station 9 stopped answering —
+      and why, tonight, it started again.
+    </div>
+    <div class="callsign-row">
+      <label class="callsign-label" for="callsign-input">Operator Callsign</label>
+      <input type="text" id="callsign-input" class="terminal-input callsign-input" placeholder="ENTER YOUR NAME" maxlength="24" autocomplete="off">
+    </div>
+    <div class="roster" id="roster"></div>
+    <button class="power-btn" id="btn-power">◉ Power On</button>
+    <div class="callsign-error" id="callsign-error"></div>
+    <div class="footnote" id="resume-note"></div>
+    <div class="footnote">Every operator keeps their own signal — play together or take turns on your own.</div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="screen-game" style="display:none;">
+    <div class="statusbar">
+      <div class="status-group">
+        <div class="dots" id="dots"></div>
+        <div class="clock" id="clock">00:00</div>
+        <div class="operator-tag" id="operator-tag">Operator: —</div>
+      </div>
+      <div class="status-group">
+        <div class="integrity">
+          <span class="integrity-label">Signal</span>
+          <div class="bars" id="bars"></div>
+        </div>
+        <button class="iconbtn" id="btn-mute" title="Mute">🔊</button>
+        <button class="iconbtn" id="btn-switch" title="Switch Operator">⇄</button>
+        <button class="iconbtn" id="btn-reset" title="Restart">↺</button>
+      </div>
+    </div>
+    <div class="crt-viewport">
+      <canvas id="scope"></canvas>
+      <div id="chapter-content"></div>
+    </div>
+    <div class="archive-strip" id="archive-strip"></div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="screen-end" style="display:none;">
+    <div class="eyebrow">Transmission Complete</div>
+    <div class="end-title">Signal Secured</div>
+    <div class="end-body" id="end-body"></div>
+    <div class="stats" id="end-stats"></div>
+    <button class="power-btn" id="btn-replay">Replay Station 9</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= STATE ================= */
+  var state = {
+    chapter: 1,          // 1..5, 6 = end
+    integrity: 5,
+    hintsLeft: 3,
+    hintsUsedTotal: 0,
+    startTime: null,
+    fragments: [],
+    ch2Shift: 11,
+    ch2Plain: "THE HOLLOW ANSWERS BACK",
+    ch4Round: 0,
+    ch4MaxRounds: 6,
+    ch4Sequence: [],
+    ch4UserIndex: 0,
+    ch4Accepting: false
+  };
+
+  var STORAGE_PREFIX = "relay9-progress-";
+  var currentCallsign = "";
+  function sanitizeCallsign(name){
+    name = (name||"").trim().toLowerCase();
+    name = name.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if(!name) name = "operator";
+    if(name.length>40) name = name.slice(0,40);
+    return name;
+  }
+  function displayName(name){
+    return sanitizeCallsign(name).toUpperCase().replace(/-/g, " ");
+  }
+  function storageKey(){
+    return STORAGE_PREFIX + sanitizeCallsign(currentCallsign);
+  }
+
+  /* ================= AUDIO ================= */
+  var audioCtx = null, masterGain = null, ambientNodes = null, muted = false;
+  var noiseBufferCache = null;
+  var heartbeatTimer = null, heartbeatBpm = 62;
+
+  function initAudio(){
+    if(audioCtx) return;
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.55;
+      masterGain.connect(audioCtx.destination);
+      startAmbient();
+      startHeartbeat(60);
+    }catch(e){ /* audio not available, game still playable */ }
+  }
+
+  function getNoiseBuffer(){
+    if(noiseBufferCache) return noiseBufferCache;
+    var len = audioCtx.sampleRate * 2;
+    var buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    var data = buf.getChannelData(0);
+    for(var i=0;i<len;i++){ data[i] = (Math.random()*2-1) * 0.6; }
+    noiseBufferCache = buf;
+    return buf;
+  }
+
+  function startAmbient(){
+    if(!audioCtx) return;
+    var o1 = audioCtx.createOscillator();
+    var o2 = audioCtx.createOscillator();
+    o1.type = "sine"; o1.frequency.value = 55;
+    o2.type = "sine"; o2.frequency.value = 55.6;
+    var g = audioCtx.createGain(); g.gain.value = 0.05;
+    var lfo = audioCtx.createOscillator(); lfo.frequency.value = 0.07;
+    var lfoGain = audioCtx.createGain(); lfoGain.gain.value = 0.025;
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    var filt = audioCtx.createBiquadFilter(); filt.type="lowpass"; filt.frequency.value=220;
+    o1.connect(filt); o2.connect(filt); filt.connect(g); g.connect(masterGain);
+
+    var noiseSrc = audioCtx.createBufferSource();
+    noiseSrc.buffer = getNoiseBuffer(); noiseSrc.loop = true;
+    var noiseFilt = audioCtx.createBiquadFilter(); noiseFilt.type="bandpass"; noiseFilt.frequency.value=800; noiseFilt.Q.value=0.6;
+    var noiseGain = audioCtx.createGain(); noiseGain.gain.value=0.02;
+    noiseSrc.connect(noiseFilt); noiseFilt.connect(noiseGain); noiseGain.connect(masterGain);
+
+    o1.start(); o2.start(); lfo.start(); noiseSrc.start();
+    ambientNodes = {o1:o1,o2:o2,lfo:lfo,noiseSrc:noiseSrc,g:g};
+  }
+
+  function startHeartbeat(bpm){
+    heartbeatBpm = bpm;
+    if(heartbeatTimer) clearInterval(heartbeatTimer);
+    scheduleHeartbeatLoop();
+  }
+  function scheduleHeartbeatLoop(){
+    var interval = 60000/heartbeatBpm;
+    heartbeatTimer = setInterval(function(){
+      thump(0); setTimeout(function(){ thump(1); }, 130);
+    }, interval);
+  }
+  function setHeartbeatBpm(bpm){
+    bpm = Math.max(55, Math.min(140, bpm));
+    if(Math.abs(bpm-heartbeatBpm) < 2) return;
+    heartbeatBpm = bpm;
+    if(heartbeatTimer) clearInterval(heartbeatTimer);
+    scheduleHeartbeatLoop();
+  }
+  function thump(which){
+    if(!audioCtx) return;
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = "sine";
+    o.frequency.value = which===0 ? 58 : 46;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(masterGain);
+    var t = audioCtx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.35, t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.16);
+    o.start(t); o.stop(t+0.2);
+  }
+
+  function playGlitch(){
+    if(audioCtx){
+      var src = audioCtx.createBufferSource();
+      src.buffer = getNoiseBuffer();
+      var g = audioCtx.createGain(); g.gain.value = 0.25;
+      var filt = audioCtx.createBiquadFilter(); filt.type="highpass"; filt.frequency.value=1200;
+      src.connect(filt); filt.connect(g); g.connect(masterGain);
+      var t = audioCtx.currentTime;
+      g.gain.setValueAtTime(0.25, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.25);
+      src.start(t); src.stop(t+0.26);
+
+      var o = audioCtx.createOscillator(); o.type="sawtooth";
+      var g2 = audioCtx.createGain(); g2.gain.value=0.08;
+      o.connect(g2); g2.connect(masterGain);
+      o.frequency.setValueAtTime(180, t);
+      o.frequency.exponentialRampToValueAtTime(40, t+0.2);
+      g2.gain.exponentialRampToValueAtTime(0.001, t+0.22);
+      o.start(t); o.stop(t+0.23);
+    }
+    scopeSpike();
+    var app = document.getElementById("app");
+    app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+  }
+
+  function playSuccess(){
+    if(!audioCtx) return;
+    var freqs = [440, 554, 660];
+    freqs.forEach(function(f, i){
+      var o = audioCtx.createOscillator(); o.type="sine";
+      var g = audioCtx.createGain(); g.gain.value=0.0001;
+      o.connect(g); g.connect(masterGain);
+      var t = audioCtx.currentTime + i*0.09;
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.18, t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.4);
+      o.start(t); o.stop(t+0.42);
+    });
+  }
+
+  function playTone(freq, dur){
+    if(!audioCtx) return;
+    var o = audioCtx.createOscillator(); o.type="triangle";
+    var g = audioCtx.createGain(); g.gain.value=0.0001;
+    o.connect(g); g.connect(masterGain);
+    var t = audioCtx.currentTime;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.22, t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+(dur||0.25));
+    o.start(t); o.stop(t+(dur||0.25)+0.02);
+  }
+
+  function toggleMute(){
+    muted = !muted;
+    if(masterGain) masterGain.gain.value = muted ? 0 : 0.55;
+    document.getElementById("btn-mute").textContent = muted ? "🔇" : "🔊";
+  }
+
+  /* ================= SCOPE CANVAS ================= */
+  var scopeCanvas, scopeCtx, scopeAmplitude = 6, scopePhase = 0;
+  function setupScope(){
+    scopeCanvas = document.getElementById("scope");
+    scopeCtx = scopeCanvas.getContext("2d");
+    resizeScope();
+    window.addEventListener("resize", resizeScope);
+    requestAnimationFrame(scopeLoop);
+  }
+  function resizeScope(){
+    var rect = scopeCanvas.parentElement.getBoundingClientRect();
+    scopeCanvas.width = rect.width;
+    scopeCanvas.height = 70;
+  }
+  function scopeSpike(){ scopeAmplitude = 34; }
+  function scopeLoop(){
+    if(scopeCtx){
+      var w = scopeCanvas.width, h = scopeCanvas.height;
+      scopeCtx.clearRect(0,0,w,h);
+      scopeCtx.beginPath();
+      scopeCtx.strokeStyle = "rgba(255,182,39,0.55)";
+      scopeCtx.lineWidth = 1.5;
+      var mid = h/2;
+      for(var x=0; x<w; x+=3){
+        var jitter = (Math.random()-0.5) * (scopeAmplitude*0.35);
+        var y = mid + Math.sin((x*0.05)+scopePhase)*scopeAmplitude*0.5 + jitter;
+        if(x===0) scopeCtx.moveTo(x,y); else scopeCtx.lineTo(x,y);
+      }
+      scopeCtx.stroke();
+      scopePhase += 0.12;
+      scopeAmplitude = Math.max(6, scopeAmplitude*0.93);
+    }
+    requestAnimationFrame(scopeLoop);
+  }
+
+  /* ================= PERSISTENCE ================= */
+  function saveProgress(){
+    try{
+      localStorage.setItem(storageKey(), JSON.stringify({
+        chapter: state.chapter,
+        integrity: state.integrity,
+        hintsLeft: state.hintsLeft,
+        hintsUsedTotal: state.hintsUsedTotal,
+        fragments: state.fragments
+      }));
+    }catch(e){}
+  }
+  function loadProgress(){
+    return new Promise(function(resolve){
+      try{
+        var data = localStorage.getItem(storageKey());
+        if(data){
+          try{ resolve(JSON.parse(data)); }catch(e){ resolve(null); }
+        } else resolve(null);
+      }catch(e){ resolve(null); }
+    });
+  }
+  function clearProgress(){
+    try{ localStorage.removeItem(storageKey()); }catch(e){}
+  }
+  function checkExistingSave(name){
+    var key = STORAGE_PREFIX + sanitizeCallsign(name);
+    return new Promise(function(resolve){
+      try{
+        var data = localStorage.getItem(key);
+        if(data){
+          try{ resolve(JSON.parse(data)); }catch(e){ resolve(null); }
+        } else resolve(null);
+      }catch(e){ resolve(null); }
+    });
+  }
+  function loadRoster(){
+    try{
+      var names = [];
+      for(var i = 0; i < localStorage.length; i++){
+        var key = localStorage.key(i);
+        if(key && key.indexOf(STORAGE_PREFIX) === 0){
+          names.push(key.replace(STORAGE_PREFIX, ""));
+        }
+      }
+      renderRoster(names);
+    }catch(e){}
+  }
+  function renderRoster(names){
+    var el = document.getElementById("roster");
+    if(!el) return;
+    if(!names.length){ el.innerHTML = ""; return; }
+    el.innerHTML = "<div class='roster-label'>Recent operators</div>" + names.map(function(n){
+      return '<button type="button" class="chip" data-name="'+n+'">'+displayName(n)+'</button>';
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".chip"), function(btn){
+      btn.addEventListener("click", function(){
+        var input = document.getElementById("callsign-input");
+        input.value = btn.getAttribute("data-name");
+        updateResumeNote();
+        input.focus();
+      });
+    });
+  }
+  var resumeDebounce = null;
+  function updateResumeNote(){
+    var input = document.getElementById("callsign-input");
+    var note = document.getElementById("resume-note");
+    if(!input || !note) return;
+    var val = input.value;
+    if(!val || !val.trim()){ note.textContent = ""; return; }
+    checkExistingSave(val).then(function(data){
+      if(data && data.chapter && data.chapter>1){
+        note.textContent = "Saved signal detected for " + displayName(val) + " — powering on will resume at Transmission " + data.chapter + ".";
+      } else {
+        note.textContent = "";
+      }
+    });
+  }
+
+  /* ================= HELPERS ================= */
+  function $(id){ return document.getElementById(id); }
+  function shiftChar(c, n){
+    var code = c.charCodeAt(0);
+    if(code>=65 && code<=90){ return String.fromCharCode(((code-65+n)%26+26)%26+65); }
+    return c;
+  }
+  function caesar(text, n){
+    var out = "";
+    for(var i=0;i<text.length;i++){ out += shiftChar(text[i], n); }
+    return out;
+  }
+
+  function updateStatusBar(){
+    var dotsEl = $("dots"); dotsEl.innerHTML = "";
+    for(var i=1;i<=5;i++){
+      var d = document.createElement("div");
+      d.className = "dot" + (i<state.chapter ? " done" : (i===state.chapter ? " current" : ""));
+      dotsEl.appendChild(d);
+    }
+    var barsEl = $("bars"); barsEl.innerHTML = "";
+    for(var b=1;b<=5;b++){
+      var el = document.createElement("div");
+      el.className = "bar" + (b<=state.integrity ? " on" : "") + (state.integrity<=2 ? " critical" : "");
+      barsEl.appendChild(el);
+    }
+    var archive = $("archive-strip");
+    archive.innerHTML = state.fragments.length
+      ? "Archive: " + state.fragments.map(function(f){ return "<b>"+f+"</b>"; }).join("&nbsp;&nbsp;·&nbsp;&nbsp;")
+      : "Archive: nothing recovered yet";
+    setHeartbeatBpm(60 + (5-state.integrity)*10);
+  }
+
+  function damage(amount){
+    state.integrity = Math.max(0, state.integrity - amount);
+    updateStatusBar();
+    saveProgress();
+  }
+
+  var clockIntervalHandle = null;
+  function clockStart(){
+    state.startTime = Date.now();
+    if(clockIntervalHandle) clearInterval(clockIntervalHandle);
+    clockIntervalHandle = setInterval(function(){
+      var s = Math.floor((Date.now()-state.startTime)/1000);
+      var mm = String(Math.floor(s/60)).padStart(2,"0");
+      var ss = String(s%60).padStart(2,"0");
+      $("clock").textContent = mm+":"+ss;
+    }, 1000);
+  }
+
+  /* ================= HINTS ================= */
+  var HINTS = {
+    1: "The scanner cycles once, about fifteen symbols. Start counting the instant it begins — there's no replay.",
+    2: "A word with a doubled letter is the easiest place to first spot the pattern as you rotate the shift.",
+    3: "Ignore anything written as a digit. You're only counting numbers spelled out as words, in order.",
+    4: "Watch the pads, not the count. The sequence always replays a little slower than it feels.",
+    5: "The word you need was decoded once already, back when the static first cleared into language."
+  };
+  function requestHint(){
+    if(state.hintsLeft<=0) return;
+    state.hintsLeft--; state.hintsUsedTotal++;
+    damage(1);
+    var box = document.querySelector(".hint-box");
+    if(box){ box.textContent = "Hint: " + HINTS[state.chapter]; box.classList.add("show"); }
+    var btn = $("btn-hint");
+    if(btn) btn.textContent = "Request Hint (" + state.hintsLeft + " left)";
+    if(state.hintsLeft<=0 && btn) btn.disabled = true;
+  }
+
+  /* ================= CHAPTER RENDERING ================= */
+  function renderChapter(){
+    updateStatusBar();
+    var c = $("chapter-content");
+    if(state.chapter===1) c.innerHTML = tpl1();
+    else if(state.chapter===2) c.innerHTML = tpl2();
+    else if(state.chapter===3) c.innerHTML = tpl3();
+    else if(state.chapter===4) c.innerHTML = tpl4();
+    else if(state.chapter===5) c.innerHTML = tpl5();
+    wireHintButton();
+    if(state.chapter===1) initChapter1();
+    if(state.chapter===2) initChapter2();
+    if(state.chapter===3) initChapter3();
+    if(state.chapter===4) initChapter4();
+    if(state.chapter===5) initChapter5();
+  }
+
+  function wireHintButton(){
+    var btn = $("btn-hint");
+    if(!btn) return;
+    btn.textContent = "Request Hint (" + state.hintsLeft + " left)";
+    if(state.hintsLeft<=0) btn.disabled = true;
+    btn.addEventListener("click", requestHint);
+  }
+
+  function hintMarkup(){
+    return '<div class="input-row" style="margin-top:14px;">'+
+      '<button class="btn ghost" id="btn-hint">Request Hint</button>'+
+      '</div><div class="hint-box"></div>';
+  }
+
+  function advanceChapter(fragment){
+    if(fragment) state.fragments.push(fragment);
+    playSuccess();
+    state.chapter++;
+    saveProgress();
+    var c = $("chapter-content");
+    c.style.transition = "opacity 0.25s ease";
+    c.style.opacity = "0";
+    setTimeout(function(){
+      if(state.chapter>5){ showEnd(); return; }
+      renderChapter();
+      c.style.opacity = "1";
+    }, 320);
+  }
+
+  /* ---- Chapter 1: signal scan ---- */
+  var ch1 = { target:null, correctCount:0, locked:true };
+  function tpl1(){
+    return '<div class="ch-eyebrow">Transmission 1 of 5</div>'+
+      '<h2 class="ch-title">First Contact</h2>'+
+      '<div class="ch-body">The terminal boots on the third try. A cursor blinks in the dark. Before it will accept a signal, it wants proof someone is actually watching — not just listening.</div>'+
+      '<div class="panel">'+
+        '<div class="scanner-target">Watch the scanner. Count how many times this marker appears: <span id="target-symbol">–</span></div>'+
+        '<div class="scanner-display" id="scanner-display">·</div>'+
+        '<div class="scanner-hint" id="scanner-hint">Scanning will begin in a moment…</div>'+
+      '</div>'+
+      '<div class="input-row">'+
+        '<input type="text" inputmode="numeric" maxlength="2" class="terminal-input" id="ch1-input" placeholder="ENTER COUNT" disabled>'+
+        '<button class="btn" id="ch1-submit" disabled>Transmit</button>'+
+      '</div>'+
+      '<div class="feedback" id="ch1-feedback"></div>'+
+      hintMarkup();
+  }
+  function initChapter1(){
+    var symbols = ["▲","●","■","♦"];
+    var target = symbols[Math.floor(Math.random()*symbols.length)];
+    var correctCount = 3 + Math.floor(Math.random()*3);
+    var others = symbols.filter(function(s){ return s!==target; });
+    var seq = [];
+    for(var i=0;i<correctCount;i++) seq.push(target);
+    while(seq.length<14){ seq.push(others[Math.floor(Math.random()*others.length)]); }
+    for(var i2=seq.length-1;i2>0;i2--){
+      var j = Math.floor(Math.random()*(i2+1));
+      var tmp = seq[i2]; seq[i2]=seq[j]; seq[j]=tmp;
+    }
+    ch1.target = target; ch1.correctCount = correctCount; ch1.locked = true;
+    $("target-symbol").textContent = target;
+
+    var idx = 0;
+    var display = $("scanner-display");
+    var hintLine = $("scanner-hint");
+    hintLine.textContent = "Scanning…";
+    var timer = setInterval(function(){
+      if(idx < seq.length){
+        display.textContent = seq[idx];
+        playTone(300 + idx*4, 0.08);
+        idx++;
+      } else {
+        clearInterval(timer);
+        display.textContent = "—";
+        hintLine.textContent = "Scan complete. Enter the count.";
+        ch1.locked = false;
+        $("ch1-input").disabled = false;
+        $("ch1-submit").disabled = false;
+        $("ch1-input").focus();
+      }
+    }, 380);
+
+    function submit(){
+      if(ch1.locked) return;
+      var val = parseInt($("ch1-input").value, 10);
+      var fb = $("ch1-feedback");
+      if(val === ch1.correctCount){
+        fb.textContent = "Signal locked. The cursor steadies.";
+        fb.className = "feedback good";
+        $("ch1-submit").disabled = true;
+        setTimeout(function(){ advanceChapter("SCAN OK"); }, 700);
+      } else {
+        fb.textContent = "No match. Static returns.";
+        fb.className = "feedback bad";
+        playGlitch(); damage(1);
+      }
+    }
+    $("ch1-submit").addEventListener("click", submit);
+    $("ch1-input").addEventListener("keydown", function(e){ if(e.key==="Enter") submit(); });
+  }
+
+  /* ---- Chapter 2: cipher ---- */
+  function tpl2(){
+    var cipher = caesar(state.ch2Plain, state.ch2Shift);
+    return '<div class="ch-eyebrow">Transmission 2 of 5</div>'+
+      '<h2 class="ch-title">The Operator\'s Log</h2>'+
+      '<div class="ch-body">A log fragment, hand-typed and partially encoded — standard procedure whenever Operator Mara Voss suspected someone else might read her notes first. Rotate the shift until the static resolves into words.</div>'+
+      '<div class="panel">'+
+        '<div class="cipher-text" id="cipher-text">'+cipher+'</div>'+
+        '<div class="decode-preview" id="decode-preview">'+cipher+'</div>'+
+        '<input type="range" min="0" max="25" value="0" id="ch2-slider">'+
+        '<div class="shift-readout" id="shift-readout">SHIFT: 0</div>'+
+        '<button class="lock-btn" id="ch2-lock" disabled>Lock Frequency</button>'+
+      '</div>'+
+      '<div class="feedback" id="ch2-feedback"></div>'+
+      hintMarkup();
+  }
+  function initChapter2(){
+    var cipher = $("cipher-text").textContent;
+    var slider = $("ch2-slider");
+    var preview = $("decode-preview");
+    var lockBtn = $("ch2-lock");
+    function update(){
+      var val = parseInt(slider.value,10);
+      var decoded = caesar(cipher, val);
+      preview.textContent = decoded;
+      $("shift-readout").textContent = "SHIFT: " + val;
+      var correct = (decoded === state.ch2Plain);
+      preview.classList.toggle("locked", correct);
+      lockBtn.classList.toggle("enabled", correct);
+      lockBtn.disabled = !correct;
+    }
+    slider.addEventListener("input", update);
+    update();
+    lockBtn.addEventListener("click", function(){
+      if(lockBtn.disabled) return;
+      var fb = $("ch2-feedback");
+      fb.textContent = "Frequency locked. \u201cIt isn't an echo. Echoes don't change what you say.\u201d \u2014 M.V.";
+      fb.className = "feedback good";
+      lockBtn.disabled = true;
+      setTimeout(function(){ advanceChapter("HOLLOW"); }, 900);
+    });
+  }
+
+  /* ---- Chapter 3: coordinates ---- */
+  function tpl3(){
+    return '<div class="ch-eyebrow">Transmission 3 of 5</div>'+
+      '<h2 class="ch-title">The Coordinates</h2>'+
+      '<div class="ch-body">A recovered incident log, page torn at the corner. The coordinate lock only accepts numbers spelled out in words — ignore anything written as a digit — and reads them in the order they appear.</div>'+
+      '<div class="panel">'+
+        '<div class="ch-body" style="margin-bottom:0;">'+
+          '"Blackfern Ridge, 1987. Nine miles from the nearest road, Station 9 went quiet at 03:14 and stayed that way for three days before anyone climbed up to check. What they found: zero bodies, but every logbook accounted for. The search team counted seven sets of footprints leaving the tower. They counted one set coming back."'+
+        '</div>'+
+      '</div>'+
+      '<div class="input-row">'+
+        '<input type="text" inputmode="numeric" maxlength="4" class="terminal-input" id="ch3-input" placeholder="ENTER CODE">'+
+        '<button class="btn" id="ch3-submit">Transmit</button>'+
+      '</div>'+
+      '<div class="feedback" id="ch3-feedback"></div>'+
+      hintMarkup();
+  }
+  function initChapter3(){
+    function submit(){
+      var val = $("ch3-input").value.trim();
+      var fb = $("ch3-feedback");
+      if(val === "3071"){
+        fb.textContent = "Coordinate resolved. Whatever's transmitting isn't at Station 9 anymore. It's underneath it.";
+        fb.className = "feedback good";
+        $("ch3-submit").disabled = true;
+        setTimeout(function(){ advanceChapter("3071"); }, 800);
+      } else {
+        fb.textContent = "Coordinate rejected.";
+        fb.className = "feedback bad";
+        playGlitch(); damage(1);
+      }
+    }
+    $("ch3-submit").addEventListener("click", submit);
+    $("ch3-input").addEventListener("keydown", function(e){ if(e.key==="Enter") submit(); });
+  }
+
+  /* ---- Chapter 4: frequency lock (simon) ---- */
+  var padDefs = [
+    {label:"LOW", freq:220},
+    {label:"MID", freq:330},
+    {label:"HIGH", freq:440},
+    {label:"PEAK", freq:554}
+  ];
+  function tpl4(){
+    return '<div class="ch-eyebrow">Transmission 4 of 5</div>'+
+      '<h2 class="ch-title">Frequency Lock</h2>'+
+      '<div class="ch-body">Four bands are drifting out of sync, and the drift is getting worse. Match each pattern before the static swallows it.</div>'+
+      '<div class="round-readout" id="ch4-round">Round 0 / '+state.ch4MaxRounds+'</div>'+
+      '<div class="pads" id="ch4-pads">'+
+        padDefs.map(function(p,i){ return '<button class="pad" data-i="'+i+'">'+p.label+'</button>'; }).join("")+
+      '</div>'+
+      '<div class="timerbar-track"><div class="timerbar-fill" id="ch4-timerfill"></div></div>'+
+      '<div class="feedback" id="ch4-feedback"></div>'+
+      hintMarkup();
+  }
+  var ch4TimeoutHandle = null;
+  function initChapter4(){
+    state.ch4Round = 0; state.ch4Sequence = []; state.ch4UserIndex = 0; state.ch4Accepting = false;
+    var pads = document.querySelectorAll("#ch4-pads .pad");
+    pads.forEach(function(pad){
+      pad.addEventListener("click", function(){
+        if(!state.ch4Accepting) return;
+        var i = parseInt(pad.getAttribute("data-i"),10);
+        handlePadPress(i, pad);
+      });
+    });
+    nextRound();
+  }
+  function nextRound(){
+    state.ch4Round++;
+    $("ch4-round").textContent = "Round " + state.ch4Round + " / " + state.ch4MaxRounds;
+    state.ch4Sequence.push(Math.floor(Math.random()*4));
+    state.ch4UserIndex = 0;
+    state.ch4Accepting = false;
+    playSequence();
+  }
+  function playSequence(){
+    var pads = document.querySelectorAll("#ch4-pads .pad");
+    var i = 0;
+    var speed = Math.max(420, 720 - state.ch4Round*40);
+    var iv = setInterval(function(){
+      if(i>0) pads[state.ch4Sequence[i-1]].classList.remove("lit");
+      if(i < state.ch4Sequence.length){
+        var idx = state.ch4Sequence[i];
+        pads[idx].classList.add("lit");
+        playTone(padDefs[idx].freq, 0.22);
+        i++;
+      } else {
+        clearInterval(iv);
+        setTimeout(function(){
+          pads.forEach(function(p){ p.classList.remove("lit"); });
+          state.ch4Accepting = true;
+          startPadTimer();
+        }, speed);
+      }
+    }, speed);
+  }
+  function startPadTimer(){
+    var fill = $("ch4-timerfill");
+    if(!fill) return;
+    fill.style.transition = "none";
+    fill.style.width = "100%";
+    void fill.offsetWidth;
+    var duration = 2600;
+    fill.style.transition = "width " + duration + "ms linear";
+    fill.style.width = "0%";
+    if(ch4TimeoutHandle) clearTimeout(ch4TimeoutHandle);
+    ch4TimeoutHandle = setTimeout(function(){
+      if(state.ch4Accepting) roundFail();
+    }, duration);
+  }
+  function handlePadPress(i, padEl){
+    padEl.classList.add("lit");
+    playTone(padDefs[i].freq, 0.18);
+    setTimeout(function(){ padEl.classList.remove("lit"); }, 180);
+    if(i === state.ch4Sequence[state.ch4UserIndex]){
+      state.ch4UserIndex++;
+      if(state.ch4UserIndex >= state.ch4Sequence.length){
+        state.ch4Accepting = false;
+        if(ch4TimeoutHandle) clearTimeout(ch4TimeoutHandle);
+        var fb = $("ch4-feedback");
+        if(state.ch4Round >= state.ch4MaxRounds){
+          fb.textContent = "All bands locked. Dead air. Then something breathes into the mic.";
+          fb.className = "feedback good";
+          setTimeout(function(){ advanceChapter("LOCKED"); }, 900);
+        } else {
+          fb.textContent = "Band locked.";
+          fb.className = "feedback good";
+          setTimeout(nextRound, 700);
+        }
+      } else {
+        startPadTimer();
+      }
+    } else {
+      roundFail();
+    }
+  }
+  function roundFail(){
+    state.ch4Accepting = false;
+    if(ch4TimeoutHandle) clearTimeout(ch4TimeoutHandle);
+    playGlitch(); damage(1);
+    var fb = $("ch4-feedback");
+    fb.textContent = "Drift detected. Re-syncing this band.";
+    fb.className = "feedback bad";
+    state.ch4UserIndex = 0;
+    setTimeout(function(){
+      fb.textContent = "";
+      playSequence();
+    }, 900);
+  }
+
+  /* ---- Chapter 5: final transmission ---- */
+  var ch5Interval = null, ch5Remaining = 90;
+  function tpl5(){
+    return '<div class="ch-eyebrow">Transmission 5 of 5 — Signal Window Open</div>'+
+      '<h2 class="ch-title">Final Transmission</h2>'+
+      '<div class="ch-body">Every fragment you\'ve recovered points to one word — the word the mountain gave back when Mara Voss asked what was listening. Type it before the window closes.</div>'+
+      '<div class="countdown" id="ch5-countdown">01:30</div>'+
+      '<div class="input-row">'+
+        '<input type="text" class="terminal-input" id="ch5-input" placeholder="ENTER PASSPHRASE">'+
+        '<button class="btn" id="ch5-submit">Transmit</button>'+
+      '</div>'+
+      '<div class="feedback" id="ch5-feedback"></div>'+
+      hintMarkup();
+  }
+  function initChapter5(){
+    ch5Remaining = 90;
+    function updateCh5Clock(){
+      var mm = String(Math.floor(ch5Remaining/60)).padStart(2,"0");
+      var ss = String(ch5Remaining%60).padStart(2,"0");
+      var el = $("ch5-countdown");
+      if(el) el.textContent = mm+":"+ss;
+    }
+    function tick(){
+      ch5Remaining--;
+      updateCh5Clock();
+      if(ch5Remaining<=0){
+        clearInterval(ch5Interval);
+        var fb = $("ch5-feedback");
+        fb.textContent = "Signal lost. Reconnecting…";
+        fb.className = "feedback bad";
+        playGlitch(); damage(1);
+        setTimeout(function(){
+          if(state.chapter===5){
+            ch5Remaining = 90;
+            updateCh5Clock();
+            fb.textContent = "Signal window reopened.";
+            fb.className = "feedback good";
+            ch5Interval = setInterval(tick, 1000);
+          }
+        }, 1200);
+      }
+    }
+    updateCh5Clock();
+    if(ch5Interval) clearInterval(ch5Interval);
+    ch5Interval = setInterval(tick, 1000);
+    function submit(){
+      var val = $("ch5-input").value.trim().toLowerCase();
+      var fb = $("ch5-feedback");
+      if(val === "hollow"){
+        clearInterval(ch5Interval);
+        fb.textContent = "Passphrase accepted.";
+        fb.className = "feedback good";
+        $("ch5-submit").disabled = true;
+        setTimeout(function(){ advanceChapter("HOLLOW ✓"); }, 900);
+      } else {
+        fb.textContent = "Passphrase rejected.";
+        fb.className = "feedback bad";
+        playGlitch(); damage(1);
+      }
+    }
+    $("ch5-submit").addEventListener("click", submit);
+    $("ch5-input").addEventListener("keydown", function(e){ if(e.key==="Enter") submit(); });
+  }
+
+  /* ================= END SCREEN ================= */
+  function showEnd(){
+    if(ch5Interval) clearInterval(ch5Interval);
+    document.getElementById("screen-game").style.display = "none";
+    document.getElementById("screen-end").style.display = "block";
+    document.getElementById("end-body").innerHTML =
+      "The terminal goes quiet. On the log, one line types itself, slow, like something's still deciding how to say it:<br><br>"+
+      "<b style='color:var(--amber)'>\u201cWE'VE BEEN HOLLOW A LONG TIME. THANK YOU FOR ANSWERING.\u201d</b><br><br>"+
+      "Then the cursor blinks, alone, waiting for the next person who finds Station 9.";
+    var elapsed = Math.floor((Date.now()-state.startTime)/1000);
+    var mm = String(Math.floor(elapsed/60)).padStart(2,"0");
+    var ss = String(elapsed%60).padStart(2,"0");
+    document.getElementById("end-stats").innerHTML =
+      '<div class="stat"><span class="num">'+mm+":"+ss+'</span><span class="lbl">Time</span></div>'+
+      '<div class="stat"><span class="num">'+state.hintsUsedTotal+'</span><span class="lbl">Hints Used</span></div>'+
+      '<div class="stat"><span class="num">'+state.integrity+'/5</span><span class="lbl">Signal Left</span></div>';
+    
+    // Submit score to arcade leaderboard
+    submitScore({
+      game: "relay-station-9",
+      operator: currentCallsign,
+      metric: "seconds",
+      value: elapsed,
+      outcome: "completed",
+      meta: { hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
+    });
+    
+    clearProgress();
+  }
+
+  /* ================= BOOT ================= */
+  function startGame(fromResume){
+    document.getElementById("screen-title").style.display = "none";
+    document.getElementById("screen-game").style.display = "block";
+    setupScope();
+    clockStart();
+    renderChapter();
+  }
+
+  function connectAsOperator(name){
+    currentCallsign = name;
+    initAudio();
+    // reset to defaults first so a previous operator's session can't leak in
+    state.chapter = 1; state.integrity = 5; state.hintsLeft = 3; state.hintsUsedTotal = 0; state.fragments = [];
+    loadProgress().then(function(data){
+      if(data && data.chapter){
+        state.chapter = Math.min(data.chapter, 5);
+        state.integrity = typeof data.integrity==="number" ? data.integrity : 5;
+        state.hintsLeft = typeof data.hintsLeft==="number" ? data.hintsLeft : 3;
+        state.hintsUsedTotal = data.hintsUsedTotal || 0;
+        state.fragments = data.fragments || [];
+      }
+      var tag = $("operator-tag");
+      if(tag) tag.innerHTML = "Operator: <b>" + displayName(currentCallsign) + "</b>";
+      startGame();
+    });
+  }
+
+  document.getElementById("btn-power").addEventListener("click", function(){
+    var name = document.getElementById("callsign-input").value;
+    if(!name || !name.trim()){
+      document.getElementById("callsign-error").textContent = "Enter a callsign to establish connection.";
+      document.getElementById("callsign-input").focus();
+      return;
+    }
+    document.getElementById("callsign-error").textContent = "";
+    connectAsOperator(name);
+  });
+  document.getElementById("callsign-input").addEventListener("keydown", function(e){
+    if(e.key==="Enter") document.getElementById("btn-power").click();
+  });
+  document.getElementById("callsign-input").addEventListener("input", function(){
+    clearTimeout(resumeDebounce);
+    resumeDebounce = setTimeout(updateResumeNote, 350);
+  });
+
+  document.getElementById("btn-mute").addEventListener("click", toggleMute);
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    if(!confirm("Restart " + displayName(currentCallsign) + "'s transmission from the beginning?")) return;
+    clearProgress();
+    state.chapter = 1; state.integrity = 5; state.hintsLeft = 3; state.hintsUsedTotal = 0; state.fragments = [];
+    renderChapter();
+  });
+  document.getElementById("btn-switch").addEventListener("click", function(){
+    if(ch5Interval) clearInterval(ch5Interval);
+    
+    // Submit partial progress score if chapter > 1
+    if(state.chapter > 1 && state.chapter <= 5){
+      var elapsed = Math.floor((Date.now()-state.startTime)/1000);
+      submitScore({
+        game: "relay-station-9",
+        operator: currentCallsign,
+        metric: "seconds",
+        value: elapsed,
+        outcome: "in_progress",
+        meta: { chapter: state.chapter, hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
+      });
+    }
+    
+    document.getElementById("screen-game").style.display = "none";
+    document.getElementById("screen-title").style.display = "block";
+    document.getElementById("callsign-input").value = "";
+    document.getElementById("resume-note").textContent = "";
+    document.getElementById("callsign-error").textContent = "";
+    loadRoster();
+    document.getElementById("callsign-input").focus();
+  });
+  document.getElementById("btn-replay").addEventListener("click", function(){
+    state.chapter = 1; state.integrity = 5; state.hintsLeft = 3; state.hintsUsedTotal = 0; state.fragments = [];
+    document.getElementById("screen-end").style.display = "none";
+    document.getElementById("screen-game").style.display = "block";
+    clockStart();
+    renderChapter();
+  });
+
+  loadRoster();
+
+  // Check if operator is passed from URL (from arcade portal)
+  var urlOperator = getOperator();
+  if(urlOperator){
+    document.getElementById("callsign-input").value = urlOperator;
+    document.getElementById("callsign-error").textContent = "";
+    connectAsOperator(urlOperator);
+  }
+
+})();
+</script>
+</body>
+</html>

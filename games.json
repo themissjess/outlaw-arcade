@@ -1,0 +1,12 @@
+[
+  {
+    "slug": "relay-station-9",
+    "title": "Relay Station 9",
+    "tagline": "Decode the last transmission from a dead mountain relay before the signal closes.",
+    "path": "games/relay-station-9/index.html",
+    "accent": "linear-gradient(90deg,#FFB627,#D64933)",
+    "metricLabel": "Fastest Clear",
+    "sortDirection": "asc",
+    "metricType": "seconds"
+  }
+]

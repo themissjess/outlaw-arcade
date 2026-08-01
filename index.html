@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outlaw Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --room:#161311;
+    --shelf:#241D18;
+    --shelf-light:#33291F;
+    --cream:#F4EBDC;
+    --neon:#4BE3C4;
+    --neon-dim:#2C7A6B;
+    --pink:#FF4D8D;
+    --kraft:#E7D9BE;
+    --kraft-dark:#CBB98F;
+    --ink:#241C14;
+    --fog:#8C7F6E;
+    --font-marquee:'Press Start 2P', monospace;
+    --font-head:'Rubik', system-ui, sans-serif;
+    --font-body:'Rubik', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--room);}
+  body{
+    font-family:var(--font-body);
+    color:var(--cream);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{ max-width:1040px; margin:0 auto; }
+
+  /* ---- Marquee header ---- */
+  .marquee{
+    text-align:center;
+    padding:30px 20px 26px;
+    position:relative;
+  }
+  .bulbs{
+    display:flex; justify-content:center; gap:10px; margin-bottom:18px;
+  }
+  .bulb{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--neon-dim);
+    animation:chase 1.6s infinite;
+  }
+  .bulb:nth-child(odd){ animation-delay:0.4s; }
+  @keyframes chase{
+    0%,100%{ background:var(--neon-dim); box-shadow:none; }
+    50%{ background:var(--neon); box-shadow:0 0 8px rgba(75,227,196,0.9); }
+  }
+  .marquee-title{
+    font-family:var(--font-marquee);
+    font-size:26px;
+    line-height:1.6;
+    color:var(--neon);
+    text-shadow:0 0 6px rgba(75,227,196,0.6), 0 0 22px rgba(75,227,196,0.35);
+    margin:0 0 12px;
+  }
+  .marquee-title .accent{ color:var(--pink); text-shadow:0 0 6px rgba(255,77,141,0.6), 0 0 22px rgba(255,77,141,0.35); }
+  .marquee-sub{
+    font-family:var(--font-head); font-weight:500; color:var(--fog);
+    font-size:14px; letter-spacing:0.02em;
+  }
+
+  /* ---- Operator gate ---- */
+  .gate{
+    max-width:380px; margin:20px auto 8px;
+    background:var(--shelf);
+    border:1px solid var(--shelf-light);
+    border-radius:12px;
+    padding:26px 24px;
+    text-align:center;
+  }
+  .gate-label{
+    font-family:var(--font-head); font-weight:700; font-size:13px;
+    letter-spacing:0.06em; text-transform:uppercase; color:var(--cream); margin-bottom:14px;
+  }
+  .gate input{
+    width:100%; background:var(--room); border:1px solid var(--shelf-light);
+    color:var(--neon); font-family:var(--font-body); font-weight:500;
+    font-size:16px; text-align:center; text-transform:uppercase;
+    padding:12px 14px; border-radius:8px; margin-bottom:12px;
+  }
+  .gate input::placeholder{ color:#5c5347; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:14px; }
+  .chip{
+    font-family:var(--font-head); font-size:11px; font-weight:500;
+    background:var(--shelf-light); border:1px solid #453a2c; color:var(--cream);
+    padding:5px 12px; border-radius:12px; cursor:pointer; text-transform:uppercase;
+  }
+  .chip:hover{ border-color:var(--neon); color:var(--neon); }
+  .gate-btn{
+    font-family:var(--font-head); font-weight:700; letter-spacing:0.04em;
+    background:var(--neon); color:#0b2622; border:none;
+    padding:12px 28px; border-radius:8px; font-size:14px; cursor:pointer;
+    text-transform:uppercase;
+  }
+  .gate-btn:hover{ filter:brightness(1.08); }
+  .gate-error{ color:var(--pink); font-size:12px; margin-top:10px; min-height:14px; font-family:var(--font-head); }
+
+  /* ---- Active operator strip ---- */
+  .who{
+    display:none;
+    max-width:1040px; margin:0 auto 22px;
+    align-items:center; justify-content:center; gap:10px;
+    font-family:var(--font-head); font-size:13px; color:var(--fog);
+  }
+  .who b{ color:var(--neon); }
+  .who button{
+    background:none; border:1px solid var(--shelf-light); color:var(--fog);
+    font-family:var(--font-head); font-size:11px; padding:4px 10px; border-radius:10px; cursor:pointer;
+  }
+  .who button:hover{ border-color:var(--pink); color:var(--pink); }
+
+  /* ---- Shelf ---- */
+  .section-label{
+    font-family:var(--font-head); font-weight:700; font-size:13px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--fog);
+    margin:38px 4px 16px; display:flex; align-items:center; gap:10px;
+  }
+  .section-label::after{
+    content:""; flex:1; height:1px; background:var(--shelf-light);
+  }
+  .shelf{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px;
+  }
+  .cart{
+    background:var(--kraft); color:var(--ink); border-radius:10px;
+    overflow:hidden; text-decoration:none; display:flex; flex-direction:column;
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
+    transition:transform 0.15s ease;
+  }
+  .cart:hover{ transform:translateY(-3px); }
+  .cart-stripe{ height:9px; }
+  .cart-body{ padding:16px 16px 18px; flex:1; display:flex; flex-direction:column; }
+  .cart-title{
+    font-family:var(--font-head); font-weight:800; font-size:16px; margin:0 0 6px; letter-spacing:0.01em;
+  }
+  .cart-tag{ font-size:12px; color:#5a4f3d; line-height:1.5; margin-bottom:14px; flex:1; }
+  .cart-best{
+    font-family:var(--font-head); font-size:10px; font-weight:700; letter-spacing:0.06em;
+    text-transform:uppercase; color:#6b5f4a; margin-bottom:10px;
+  }
+  .cart-best b{ color:var(--ink); }
+  .cart-play{
+    font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:0.06em;
+    text-transform:uppercase; text-align:center; padding:9px; border-radius:6px;
+    background:var(--ink); color:var(--kraft);
+  }
+  .cart.locked{ opacity:0.55; filter:grayscale(0.4); cursor:default; pointer-events:none; }
+  .cart.locked .cart-play{ background:#7a6d54; }
+
+  /* ---- Scoreboard ---- */
+  .board{
+    background:var(--shelf); border:1px solid var(--shelf-light); border-radius:12px; padding:20px;
+  }
+  .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .tab{
+    font-family:var(--font-head); font-weight:500; font-size:12px;
+    background:var(--shelf-light); border:1px solid #453a2c; color:var(--fog);
+    padding:7px 14px; border-radius:16px; cursor:pointer; text-transform:uppercase; letter-spacing:0.03em;
+  }
+  .tab.active{ background:var(--neon); border-color:var(--neon); color:#0b2622; }
+  table.scores{ width:100%; border-collapse:collapse; }
+  table.scores th{
+    font-family:var(--font-head); font-size:10px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--fog); text-align:left; padding:6px 8px; border-bottom:1px solid var(--shelf-light);
+  }
+  table.scores td{
+    font-family:var(--font-head); font-size:14px; padding:10px 8px; border-bottom:1px solid #2c241c;
+  }
+  table.scores tr:last-child td{ border-bottom:none; }
+  .rank{ width:34px; font-weight:800; }
+  .rank.r1{ color:var(--neon); } .rank.r2{ color:var(--cream); } .rank.r3{ color:var(--pink); }
+  .score-empty{ text-align:center; color:var(--fog); font-size:13px; padding:20px 0; }
+
+  footer{
+    text-align:center; margin-top:40px; font-family:var(--font-head);
+    font-size:11px; color:#544a3c; letter-spacing:0.04em;
+  }
+
+  @media (max-width:520px){
+    .marquee-title{ font-size:18px; }
+    .shelf{ grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); }
+  }
+</style>
+<script src="shared/arcade-client.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="marquee">
+    <div class="bulbs">
+      <div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div>
+    </div>
+    <h1 class="marquee-title">OUTLAW<br><span class="accent">ARCADE</span></h1>
+    <div class="marquee-sub">Pick a game. Leave your mark on the board.</div>
+  </div>
+
+  <div class="gate" id="gate">
+    <div class="gate-label">Who's playing?</div>
+    <input type="text" id="gate-input" placeholder="ENTER YOUR CALLSIGN" maxlength="24" autocomplete="off">
+    <div class="chips" id="gate-chips"></div>
+    <button class="gate-btn" id="gate-btn">Check In</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+
+  <div class="who" id="who">
+    Playing as <b id="who-name">—</b>
+    <button id="who-switch">Switch</button>
+  </div>
+
+  <div id="arcade-content" style="display:none;">
+    <div class="section-label">The Shelf</div>
+    <div class="shelf" id="shelf"></div>
+
+    <div class="section-label">High Scores</div>
+    <div class="board">
+      <div class="tabs" id="tabs"></div>
+      <div id="score-table"></div>
+    </div>
+  </div>
+
+  <footer>Outlaw Arcade &middot; built one operator at a time</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     GAMES REGISTRY
+     Games are loaded from games.json. To add a new game:
+     1. Add an entry to games.json with slug, title, tagline, path, accent,
+        metricLabel, sortDirection ("asc" or "desc"), and metricType.
+     2. Create the game folder at the specified path.
+     3. Include arcade-client.js in the game and call getOperator() and submitScore().
+     ============================================================ */
+  var GAMES = [];
+
+  function $(id){ return document.getElementById(id); }
+  function sanitize(name){
+    name = (name||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+    return name || "operator";
+  }
+  function display(name){ return sanitize(name).toUpperCase().replace(/-/g," "); }
+
+  async function fetchGames(){
+    try{
+      var res = await fetch("games.json");
+      if(!res.ok) throw new Error("bad response");
+      var games = await res.json();
+      // Add formatValue function for games with metricType "seconds"
+      games.forEach(function(g){
+        if(g.metricType === "seconds"){
+          g.formatValue = function(v){ var m=Math.floor(v/60), s=v%60; return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); };
+        } else {
+          g.formatValue = function(v){ return String(v); };
+        }
+      });
+      return games;
+    }catch(e){ return []; }
+  }
+
+  // Use shared fetchLeaderboard from arcade-client.js
+  async function fetchScores(){
+    return await fetchLeaderboard();
+  }
+
+  function bestFor(scores, slug, game){
+    var rows = scores.filter(function(s){ return s.game===slug; });
+    if(!rows.length) return null;
+    rows.sort(function(a,b){ return game.sortDirection==="asc" ? a.value-b.value : b.value-a.value; });
+    return rows[0];
+  }
+
+  function renderShelf(scores){
+    var el = $("shelf");
+    el.innerHTML = GAMES.map(function(g){
+      if(g.locked){
+        return '<div class="cart locked"><div class="cart-stripe" style="background:#453a2c;"></div>'+
+          '<div class="cart-body"><div class="cart-title">'+g.title+'</div>'+
+          '<div class="cart-tag">'+g.tagline+'</div>'+
+          '<div class="cart-play">Locked</div></div></div>';
+      }
+      var best = bestFor(scores, g.slug, g);
+      var bestLine = best
+        ? '<div class="cart-best">'+g.metricLabel+': <b>'+g.formatValue(best.value)+'</b> &mdash; '+display(best.operator)+'</div>'
+        : '<div class="cart-best">No scores yet &mdash; be first</div>';
+      var op = sanitize(localStorage.getItem("arcade-operator")||"");
+      var href = g.path + "?operator=" + encodeURIComponent(op);
+      return '<a class="cart" href="'+href+'">'+
+        '<div class="cart-stripe" style="background:'+g.accent+';"></div>'+
+        '<div class="cart-body"><div class="cart-title">'+g.title+'</div>'+
+        '<div class="cart-tag">'+g.tagline+'</div>'+
+        bestLine+
+        '<div class="cart-play">Play</div></div></a>';
+    }).join("");
+    if(!GAMES.length){
+      el.innerHTML = '<div style="color:var(--fog); text-align:center; padding:40px;">No games available yet. Check back soon!</div>';
+    }
+  }
+
+  function renderBoard(scores){
+    var playable = GAMES.filter(function(g){ return !g.locked; });
+    var tabsEl = $("tabs");
+    var tableEl = $("score-table");
+    
+    if(!playable.length){
+      tabsEl.innerHTML = '';
+      tableEl.innerHTML = '<div class="score-empty">No games available yet. Check back soon!</div>';
+      return;
+    }
+    
+    tabsEl.innerHTML = playable.map(function(g,i){
+      return '<button class="tab'+(i===0?' active':'')+'" data-slug="'+g.slug+'">'+g.title+'</button>';
+    }).join("");
+    function showGame(slug){
+      Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"), function(t){
+        t.classList.toggle("active", t.getAttribute("data-slug")===slug);
+      });
+      var game = playable.filter(function(g){ return g.slug===slug; })[0];
+      var rows = scores.filter(function(s){ return s.game===slug; });
+      rows.sort(function(a,b){ return game.sortDirection==="asc" ? a.value-b.value : b.value-a.value; });
+      rows = rows.slice(0,8);
+      if(!rows.length){ tableEl.innerHTML = '<div class="score-empty">No scores logged yet for '+game.title+'. Go set one.</div>'; return; }
+      tableEl.innerHTML = '<table class="scores"><thead><tr><th>#</th><th>Operator</th><th>'+game.metricLabel+'</th><th>Date</th></tr></thead><tbody>'+
+        rows.map(function(r,i){
+          var rc = i===0?"r1":i===1?"r2":i===2?"r3":"";
+          return '<tr><td class="rank '+rc+'">'+(i+1)+'</td><td>'+display(r.operator)+'</td><td>'+game.formatValue(r.value)+'</td><td>'+r.date+'</td></tr>';
+        }).join("")+
+        '</tbody></table>';
+    }
+    tabsEl.addEventListener("click", function(e){
+      var btn = e.target.closest(".tab");
+      if(btn) showGame(btn.getAttribute("data-slug"));
+    });
+    if(playable.length) showGame(playable[0].slug);
+  }
+
+  function renderRosterChips(){
+    var el = $("gate-chips");
+    var recent = [];
+    try{ recent = JSON.parse(localStorage.getItem("arcade-recent-operators")||"[]"); }catch(e){}
+    if(!recent.length){ el.innerHTML=""; return; }
+    el.innerHTML = recent.map(function(n){ return '<button type="button" class="chip" data-name="'+n+'">'+display(n)+'</button>'; }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".chip"), function(btn){
+      btn.addEventListener("click", function(){ $("gate-input").value = btn.getAttribute("data-name"); });
+    });
+  }
+
+  function rememberOperator(name){
+    var key = sanitize(name);
+    var recent = [];
+    try{ recent = JSON.parse(localStorage.getItem("arcade-recent-operators")||"[]"); }catch(e){}
+    recent = recent.filter(function(n){ return n!==key; });
+    recent.unshift(key);
+    recent = recent.slice(0,6);
+    localStorage.setItem("arcade-recent-operators", JSON.stringify(recent));
+    localStorage.setItem("arcade-operator", key);
+  }
+
+  async function boot(){
+    GAMES = await fetchGames();
+    var scores = await fetchScores();
+    renderShelf(scores);
+    renderBoard(scores);
+
+    if(!GAMES.length){
+      $("gate").style.display = "none";
+      $("arcade-content").style.display = "block";
+      return;
+    }
+
+    var saved = localStorage.getItem("arcade-operator");
+    if(saved){
+      $("gate").style.display = "none";
+      $("who").style.display = "flex";
+      $("who-name").textContent = display(saved);
+      $("arcade-content").style.display = "block";
+    } else {
+      renderRosterChips();
+    }
+
+    $("gate-btn").addEventListener("click", function(){
+      var val = $("gate-input").value;
+      if(!val || !val.trim()){
+        $("gate-error").textContent = "Enter a callsign to check in.";
+        return;
+      }
+      rememberOperator(val);
+      $("gate").style.display = "none";
+      $("who").style.display = "flex";
+      $("who-name").textContent = display(val);
+      $("arcade-content").style.display = "block";
+      renderShelf(scores); // Re-render to update operator parameter in game links
+    });
+    $("gate-input").addEventListener("keydown", function(e){ if(e.key==="Enter") $("gate-btn").click(); });
+    $("who-switch").addEventListener("click", function(){
+      localStorage.removeItem("arcade-operator");
+      $("who").style.display = "none";
+      $("arcade-content").style.display = "none";
+      $("gate-input").value = "";
+      $("gate-error").textContent = "";
+      renderRosterChips();
+      $("gate").style.display = "block";
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
