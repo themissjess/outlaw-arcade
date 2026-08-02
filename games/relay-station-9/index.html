@@ -441,6 +441,12 @@
   }
 </style>
 <script src="../shared/arcade-client.js"></script>
+<script>
+// Debug: Check if arcade-client functions loaded in game
+console.log("Game: arcade-client functions loaded:", typeof submitScore !== 'undefined' ? "OK" : "FAILED");
+console.log("Game: submitScore type:", typeof submitScore);
+console.log("Game: getOperator type:", typeof getOperator);
+</script>
 </head>
 <body>
 <div id="app" class="grain-flicker">
@@ -1260,15 +1266,22 @@
       '<div class="stat"><span class="num">'+state.hintsUsedTotal+'</span><span class="lbl">Hints Used</span></div>'+
       '<div class="stat"><span class="num">'+state.integrity+'/5</span><span class="lbl">Signal Left</span></div>';
     
+    // Debug: Log game completion
+    console.log("Game completed - submitting score for:", currentCallsign, "time:", elapsed);
+    
     // Submit score to arcade leaderboard
-    submitScore({
-      game: "relay-station-9",
-      operator: currentCallsign,
-      metric: "seconds",
-      value: elapsed,
-      outcome: "completed",
-      meta: { hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
-    });
+    if (typeof submitScore === 'function') {
+      submitScore({
+        game: "relay-station-9",
+        operator: currentCallsign,
+        metric: "seconds",
+        value: elapsed,
+        outcome: "completed",
+        meta: { hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
+      });
+    } else {
+      console.error("submitScore function not available!");
+    }
     
     clearProgress();
   }
@@ -1332,14 +1345,20 @@
     // Submit partial progress score if chapter > 1
     if(state.chapter > 1 && state.chapter <= 5){
       var elapsed = Math.floor((Date.now()-state.startTime)/1000);
-      submitScore({
-        game: "relay-station-9",
-        operator: currentCallsign,
-        metric: "seconds",
-        value: elapsed,
-        outcome: "in_progress",
-        meta: { chapter: state.chapter, hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
-      });
+      console.log("Switching operators - submitting partial score for:", currentCallsign, "chapter:", state.chapter);
+      
+      if (typeof submitScore === 'function') {
+        submitScore({
+          game: "relay-station-9",
+          operator: currentCallsign,
+          metric: "seconds",
+          value: elapsed,
+          outcome: "in_progress",
+          meta: { chapter: state.chapter, hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
+        });
+      } else {
+        console.error("submitScore function not available for partial score!");
+      }
     }
     
     document.getElementById("screen-game").style.display = "none";
