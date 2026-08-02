@@ -446,6 +446,20 @@
 console.log("Game: arcade-client functions loaded:", typeof submitScore !== 'undefined' ? "OK" : "FAILED");
 console.log("Game: submitScore type:", typeof submitScore);
 console.log("Game: getOperator type:", typeof getOperator);
+console.log("Game: showScoreNotification type:", typeof showScoreNotification);
+
+// Show game-specific loading notification
+setTimeout(function() {
+  try {
+    if (typeof showScoreNotification === 'function') {
+      showScoreNotification("Game loaded successfully", true);
+    } else {
+      alert("Game loaded (showScoreNotification not available)");
+    }
+  } catch (e) {
+    alert("Game loaded");
+  }
+}, 1500);
 </script>
 </head>
 <body>
@@ -1266,11 +1280,24 @@ console.log("Game: getOperator type:", typeof getOperator);
       '<div class="stat"><span class="num">'+state.hintsUsedTotal+'</span><span class="lbl">Hints Used</span></div>'+
       '<div class="stat"><span class="num">'+state.integrity+'/5</span><span class="lbl">Signal Left</span></div>';
     
-    // Debug: Log game completion
+    // Debug: Log game completion and show visible notification
     console.log("Game completed - submitting score for:", currentCallsign, "time:", elapsed);
+    
+    // Show visible notification that game is completed
+    try {
+      if (typeof showScoreNotification === 'function') {
+        showScoreNotification("Game completed! Submitting score for " + currentCallsign, true);
+      } else {
+        alert("Game completed! Submitting score for " + currentCallsign);
+      }
+    } catch (e) {
+      console.warn("Could not show completion notification:", e);
+      alert("Game completed! Submitting score for " + currentCallsign);
+    }
     
     // Submit score to arcade leaderboard
     if (typeof submitScore === 'function') {
+      console.log("Calling submitScore function...");
       submitScore({
         game: "relay-station-9",
         operator: currentCallsign,
@@ -1279,8 +1306,19 @@ console.log("Game: getOperator type:", typeof getOperator);
         outcome: "completed",
         meta: { hintsUsed: state.hintsUsedTotal, integrityLeft: state.integrity }
       });
+      console.log("submitScore call completed");
     } else {
       console.error("submitScore function not available!");
+      try {
+        if (typeof showScoreNotification === 'function') {
+          showScoreNotification("ERROR: submitScore function not found!", false);
+        } else {
+          alert("ERROR: submitScore function not found!");
+        }
+      } catch (e) {
+        console.warn("Could not show error notification:", e);
+        alert("ERROR: submitScore function not found!");
+      }
     }
     
     clearProgress();
