@@ -440,17 +440,6 @@
     .terminal-input{ width:100%; }
   }
 </style>
-<script src="../shared/arcade-client.js"></script>
-<script>
-// Show game-specific loading notification
-setTimeout(function() {
-  try {
-    showScoreNotification("Game loaded successfully", true);
-  } catch (e) {
-    console.warn("Could not show game loading notification:", e);
-  }
-}, 1500);
-</script>
 </head>
 <body>
 <div id="app" class="grain-flicker">
@@ -1403,6 +1392,16 @@ setTimeout(function() {
   }
 
 })();
+</script>
+<script src="../shared/arcade-client.js"></script>
+<script>
+setTimeout(function() {
+  try {
+    showScoreNotification("Game loaded successfully", true);
+  } catch (e) {
+    console.warn("Could not show game loading notification:", e);
+  }
+}, 1500);
 </script>
 </body>
 </html>
