@@ -1158,6 +1158,11 @@ window.addEventListener('load', function() {
   function finishGame(path){
     state.ending = path;
     var elapsed = Math.floor((Date.now()-state.startTime)/1000);
+    
+    // Debug: Log game completion
+    console.log("Game completed - submitting score for:", currentCallsign, "time:", elapsed);
+    showScoreNotification("Game completed! Submitting score for " + currentCallsign, true);
+    
     submitScore({
       game:"the-antler-crown", operator: sanitize(currentCallsign),
       metric:"seconds", value: elapsed, outcome:"completed",
@@ -1240,6 +1245,20 @@ window.addEventListener('load', function() {
   });
   $("btn-switch").addEventListener("click", function(){
     if(severInterval) clearInterval(severInterval);
+    
+    // Submit partial progress score if past prologue
+    if(state.screen && state.screen !== "prologue" && state.screen !== "title"){
+      var elapsed = Math.floor((Date.now()-state.startTime)/1000);
+      console.log("Switching vowkeepers - submitting partial score for:", currentCallsign, "screen:", state.screen);
+      showScoreNotification("Switching vowkeepers - submitting partial score for " + currentCallsign, true);
+      
+      submitScore({
+        game:"the-antler-crown", operator: sanitize(currentCallsign),
+        metric:"seconds", value: elapsed, outcome:"in_progress",
+        meta:{ screen: state.screen, align: state.align, hintsUsed: state.hintsUsedTotal }
+      });
+    }
+    
     $("screen-game").style.display="none"; $("screen-title").style.display="block";
     $("callsign-input").value=""; $("resume-note").textContent=""; $("callsign-error").textContent="";
     loadRoster(); $("callsign-input").focus();
