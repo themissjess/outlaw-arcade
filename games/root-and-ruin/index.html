@@ -1123,7 +1123,7 @@ function balanceScene(onDone){
       <button class="btn secondary" id="modeRight">Place on RIGHT pan instead</button>
       <button class="btn secondary" id="clearPans">Clear pans</button>
     </div>`);
-    stage.insertBefore(modeRow, document.getElementById('scaleResult'));
+    wrap.insertBefore(modeRow, document.getElementById('scaleResult'));
     document.getElementById('modeLeft').addEventListener('click', ()=>{ mode='left'; document.getElementById('modeLeft').textContent='Placing on: LEFT pan'; document.getElementById('modeRight').textContent='Place on RIGHT pan instead'; });
     document.getElementById('modeRight').addEventListener('click', ()=>{ mode='right'; document.getElementById('modeRight').textContent='Placing on: RIGHT pan'; document.getElementById('modeLeft').textContent='Place on LEFT pan instead'; });
     document.getElementById('clearPans').addEventListener('click', ()=>{ leftPan=[]; rightPan=[]; drawPool(); drawPans(); document.getElementById('leftPan').className='pan'; document.getElementById('rightPan').className='pan'; });
