@@ -275,17 +275,7 @@ console.log("getOperator type:", typeof getOperator);
 
   // Use shared fetchLeaderboard from arcade-client.js
   async function fetchScores(){
-    try {
-      if (typeof fetchLeaderboard === 'function') {
-        return await fetchLeaderboard();
-      } else {
-        console.error("fetchLeaderboard is not available");
-        return [];
-      }
-    } catch (e) {
-      console.warn("Failed to fetch leaderboard:", e);
-      return [];
-    }
+    return await fetchLeaderboard();
   }
 
   function bestFor(scores, slug, game){
