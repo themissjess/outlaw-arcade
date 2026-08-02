@@ -8,5 +8,15 @@
     "metricLabel": "Fastest Clear",
     "sortDirection": "asc",
     "metricType": "seconds"
+  },
+  {
+    "slug": "the-antler-crown",
+    "title": "The Antler Crown",
+    "tagline": "Restore the old Covenant, forge a new one, or end it for good in this narrative adventure.",
+    "path": "games/the-antler-crown/index.html",
+    "accent": "linear-gradient(90deg,#C9A24B,#A33B4A)",
+    "metricLabel": "Fastest Clear",
+    "sortDirection": "asc",
+    "metricType": "seconds"
   }
 ]

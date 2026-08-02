@@ -442,22 +442,12 @@
 </style>
 <script src="../shared/arcade-client.js"></script>
 <script>
-// Debug: Check if arcade-client functions loaded in game
-console.log("Game: arcade-client functions loaded:", typeof submitScore !== 'undefined' ? "OK" : "FAILED");
-console.log("Game: submitScore type:", typeof submitScore);
-console.log("Game: getOperator type:", typeof getOperator);
-console.log("Game: showScoreNotification type:", typeof showScoreNotification);
-
 // Show game-specific loading notification
 setTimeout(function() {
   try {
-    if (typeof showScoreNotification === 'function') {
-      showScoreNotification("Game loaded successfully", true);
-    } else {
-      alert("Game loaded (showScoreNotification not available)");
-    }
+    showScoreNotification("Game loaded successfully", true);
   } catch (e) {
-    alert("Game loaded");
+    console.warn("Could not show game loading notification:", e);
   }
 }, 1500);
 </script>
@@ -1285,11 +1275,7 @@ setTimeout(function() {
     
     // Show visible notification that game is completed
     try {
-      if (typeof showScoreNotification === 'function') {
-        showScoreNotification("Game completed! Submitting score for " + currentCallsign, true);
-      } else {
-        alert("Game completed! Submitting score for " + currentCallsign);
-      }
+      showScoreNotification("Game completed! Submitting score for " + currentCallsign, true);
     } catch (e) {
       console.warn("Could not show completion notification:", e);
       alert("Game completed! Submitting score for " + currentCallsign);
@@ -1309,16 +1295,7 @@ setTimeout(function() {
       console.log("submitScore call completed");
     } else {
       console.error("submitScore function not available!");
-      try {
-        if (typeof showScoreNotification === 'function') {
-          showScoreNotification("ERROR: submitScore function not found!", false);
-        } else {
-          alert("ERROR: submitScore function not found!");
-        }
-      } catch (e) {
-        console.warn("Could not show error notification:", e);
-        alert("ERROR: submitScore function not found!");
-      }
+      alert("ERROR: submitScore function not found!");
     }
     
     clearProgress();

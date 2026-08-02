@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Antler Crown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0D1712;
+    --bark:#182420;
+    --bark-light:#243830;
+    --parchment:#E8DFC4;
+    --gold:#C9A24B;
+    --gold-dim:#7A6430;
+    --frost:#8FB6C9;
+    --frost-dim:#4F6B76;
+    --burgundy:#A33B4A;
+    --burgundy-dim:#5C222B;
+    --fog:#7C8A7A;
+    --font-display:'Cinzel', serif;
+    --font-body:'Cormorant Garamond', Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--void);}
+  body{
+    font-family:var(--font-body);
+    color:var(--parchment);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow-x:hidden;
+    padding:16px;
+    font-size:17px;
+  }
+  #app{
+    position:relative;
+    width:100%;
+    max-width:880px;
+    background:var(--bark);
+    border:1px solid #33463c;
+    border-radius:10px;
+    box-shadow:0 0 0 1px #000, 0 24px 70px rgba(0,0,0,0.65), inset 0 0 100px rgba(0,0,0,0.4);
+    overflow:hidden;
+  }
+  #embers{ position:absolute; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+  .ember{
+    position:absolute; width:3px; height:3px; border-radius:50%;
+    background:var(--gold); box-shadow:0 0 6px 2px rgba(201,162,75,0.7);
+    opacity:0; animation:drift linear infinite;
+  }
+  @keyframes drift{
+    0%{ opacity:0; transform:translateY(0) translateX(0); }
+    10%{ opacity:0.9; }
+    90%{ opacity:0.6; }
+    100%{ opacity:0; transform:translateY(-260px) translateX(var(--dx,20px)); }
+  }
+  @media (prefers-reduced-motion: reduce){ .ember{ animation:none; opacity:0.3; } }
+
+  .eyebrow{
+    font-family:var(--font-display); letter-spacing:0.22em; text-transform:uppercase;
+    font-size:11px; color:var(--gold); font-weight:600; margin-bottom:16px;
+  }
+  h1.game-title{
+    font-family:var(--font-display); font-weight:700; letter-spacing:0.04em;
+    text-transform:uppercase; font-size:38px; margin:0 0 8px; color:var(--parchment);
+    text-shadow:0 0 24px rgba(201,162,75,0.3);
+  }
+  .subtitle{
+    font-family:var(--font-body); font-style:italic; color:var(--fog);
+    font-size:16px; margin-bottom:26px;
+  }
+  .lede{ max-width:540px; margin:0 auto 30px; line-height:1.75; font-size:18px; }
+
+  #screen-title{ padding:54px 36px 44px; text-align:center; position:relative; z-index:5; }
+  .callsign-row{ margin-bottom:14px; }
+  .callsign-label{
+    display:block; font-family:var(--font-display); font-size:11px;
+    letter-spacing:0.16em; color:var(--fog); text-transform:uppercase; margin-bottom:10px;
+  }
+  .callsign-input{
+    max-width:280px; margin:0 auto; text-align:center; text-transform:uppercase; display:block;
+  }
+  .roster{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:22px; }
+  .chip{
+    font-family:var(--font-display); font-size:11px; letter-spacing:0.05em;
+    background:var(--bark-light); border:1px solid #33463c; color:var(--parchment);
+    padding:6px 14px; border-radius:14px; cursor:pointer; text-transform:uppercase;
+  }
+  .chip:hover{ border-color:var(--gold); color:var(--gold); }
+  .power-btn{
+    font-family:var(--font-display); background:linear-gradient(180deg,var(--gold),#8a6f2f);
+    color:#1a1200; border:none; padding:16px 38px; font-size:14px; font-weight:700;
+    letter-spacing:0.14em; text-transform:uppercase; border-radius:4px; cursor:pointer;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 8px 24px rgba(201,162,75,0.25);
+  }
+  .power-btn:hover{ filter:brightness(1.06); }
+  .power-btn:focus-visible, button:focus-visible, input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .callsign-error{ color:var(--burgundy); font-family:var(--font-display); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; min-height:16px; margin-top:12px; }
+  .footnote{ margin-top:20px; font-family:var(--font-display); font-size:10.5px; letter-spacing:0.08em; color:var(--fog); text-transform:uppercase; }
+
+  #screen-game{ position:relative; z-index:5; }
+  .statusbar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:#0f1712a0; border-bottom:1px solid #2a3c33; padding:12px 18px;
+    font-family:var(--font-display);
+  }
+  .status-group{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .location-tag{ font-size:11px; letter-spacing:0.1em; color:var(--fog); text-transform:uppercase; }
+  .location-tag b{ color:var(--parchment); font-weight:normal; }
+  .clock{ font-size:12px; letter-spacing:0.1em; color:var(--fog); }
+  .operator-tag{ font-size:10px; letter-spacing:0.1em; color:var(--fog); text-transform:uppercase; }
+  .operator-tag b{ color:var(--gold); font-weight:normal; }
+  .align-pips{ display:flex; gap:5px; align-items:center; }
+  .pip{ width:8px; height:8px; border-radius:50%; background:#33463c; }
+  .pip.gold{ background:var(--gold-dim); } .pip.gold.lit{ background:var(--gold); box-shadow:0 0 6px rgba(201,162,75,0.8); }
+  .pip.frost{ background:var(--frost-dim); } .pip.frost.lit{ background:var(--frost); box-shadow:0 0 6px rgba(143,182,201,0.8); }
+  .pip.burg{ background:var(--burgundy-dim); } .pip.burg.lit{ background:var(--burgundy); box-shadow:0 0 6px rgba(163,59,74,0.8); }
+  .resolve{ display:flex; align-items:center; gap:6px; }
+  .resolve-label{ font-size:10px; letter-spacing:0.1em; color:var(--fog); text-transform:uppercase; }
+  .bars{ display:flex; gap:3px; }
+  .bar{ width:7px; height:14px; background:#33463c; border-radius:1px; }
+  .bar.on{ background:var(--gold); box-shadow:0 0 6px rgba(201,162,75,0.6); }
+  .iconbtn{
+    background:none; border:1px solid #33463c; color:var(--fog); width:28px; height:28px;
+    border-radius:4px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center;
+  }
+  .iconbtn:hover{ border-color:var(--gold); color:var(--gold); }
+
+  .viewport{ position:relative; min-height:360px; padding:30px 30px 12px; }
+  #chapter-content{ position:relative; z-index:2; }
+  .ch-eyebrow{ font-family:var(--font-display); color:var(--gold); font-size:11px; letter-spacing:0.22em; text-transform:uppercase; font-weight:600; margin-bottom:10px; }
+  .ch-title{ font-family:var(--font-display); color:var(--parchment); font-size:26px; letter-spacing:0.02em; font-weight:700; margin:0 0 16px; }
+  .ch-body{ line-height:1.8; font-size:18px; color:var(--parchment); max-width:640px; margin-bottom:22px; }
+  .ch-body + .ch-body{ margin-top:-10px; }
+  .ch-body b{ color:var(--gold); font-weight:600; }
+  .speaker{ font-family:var(--font-display); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--frost); margin-bottom:6px; }
+
+  .choices{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .choice-btn{
+    text-align:left; background:var(--bark-light); border:1px solid #33463c; color:var(--parchment);
+    font-family:var(--font-body); font-size:17px; font-style:italic; padding:14px 18px; border-radius:6px;
+    cursor:pointer; line-height:1.5;
+  }
+  .choice-btn:hover{ border-color:var(--gold); background:#2b4038; }
+  .continue-btn{
+    font-family:var(--font-display); background:var(--gold); color:#1a1200; border:none;
+    padding:12px 26px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:12px;
+    border-radius:4px; cursor:pointer; margin-top:8px;
+  }
+  .continue-btn:hover{ filter:brightness(1.08); }
+
+  .panel{ background:#0b120e; border:1px solid #2a3c33; border-radius:6px; padding:20px; margin-bottom:18px; }
+  .input-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+  .terminal-input{
+    flex:1; min-width:180px; background:#0b120e; border:1px solid #33463c; color:var(--gold);
+    font-family:var(--font-body); font-size:18px; padding:12px 14px; border-radius:4px;
+  }
+  .terminal-input::placeholder{ color:#4a5c50; }
+  .btn{
+    font-family:var(--font-display); background:var(--gold); color:#1a1200; border:none; padding:12px 22px;
+    font-weight:700; letter-spacing:0.08em; text-transform:uppercase; font-size:12px; border-radius:4px; cursor:pointer;
+  }
+  .btn.ghost{ background:transparent; border:1px solid #33463c; color:var(--fog); }
+  .btn.ghost:hover{ border-color:var(--gold); color:var(--gold); }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .feedback{ margin-top:12px; font-family:var(--font-display); font-size:12px; letter-spacing:0.05em; text-transform:uppercase; min-height:16px; }
+  .feedback.bad{ color:var(--burgundy); } .feedback.good{ color:var(--frost); }
+  .hint-box{ margin-top:10px; padding:10px 14px; border-left:2px solid var(--gold-dim); background:rgba(201,162,75,0.06); font-size:15px; color:var(--fog); display:none; font-style:italic; }
+  .hint-box.show{ display:block; }
+
+  .coin-grid{ display:flex; flex-wrap:wrap; gap:10px; margin:14px 0; }
+  .coin{
+    width:84px; height:84px; border-radius:50%; border:2px solid #33463c; background:var(--bark-light);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;
+    font-family:var(--font-display); color:var(--parchment);
+  }
+  .coin .cname{ font-size:11px; letter-spacing:0.04em; text-transform:uppercase; }
+  .coin .cval{ font-size:18px; color:var(--gold); margin-top:2px; }
+  .coin.selected{ border-color:var(--gold); background:#2f3a24; box-shadow:0 0 14px rgba(201,162,75,0.4); }
+
+  .rune-pads{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:10px 0 6px; }
+  .rune-pad{ height:64px; border-radius:6px; border:1px solid #33463c; background:var(--bark-light); font-family:var(--font-display); color:var(--fog); letter-spacing:0.06em; font-size:11px; text-transform:uppercase; cursor:pointer; }
+  .rune-pad.lit{ background:var(--gold); color:#1a1200; box-shadow:0 0 22px rgba(201,162,75,0.6); border-color:var(--gold); }
+  .round-readout{ text-align:center; font-family:var(--font-display); font-size:12px; letter-spacing:0.08em; color:var(--fog); text-transform:uppercase; margin-bottom:8px; }
+  .timerbar-track{ height:5px; background:#0b120e; border-radius:3px; overflow:hidden; margin-top:10px; }
+  .timerbar-fill{ height:100%; background:var(--gold); width:100%; }
+
+  .cipher-text{ font-size:19px; letter-spacing:0.1em; color:var(--burgundy); word-spacing:0.3em; text-align:center; padding:10px 0; }
+  .decode-preview{ font-size:19px; letter-spacing:0.1em; color:var(--gold); word-spacing:0.3em; text-align:center; padding:10px 0; min-height:30px; }
+  .decode-preview.locked{ color:var(--frost); text-shadow:0 0 12px rgba(143,182,201,0.5); }
+  input[type=range]{ width:100%; accent-color:var(--gold); }
+  .shift-readout{ text-align:center; font-family:var(--font-display); font-size:11px; color:var(--fog); letter-spacing:0.08em; margin-top:6px; }
+  .lock-btn{ display:block; margin:14px auto 0; font-family:var(--font-display); background:transparent; border:1px solid var(--gold-dim); color:#6b5a24; padding:10px 26px; letter-spacing:0.08em; text-transform:uppercase; font-size:12px; border-radius:4px; cursor:not-allowed; }
+  .lock-btn.enabled{ color:#1a1200; background:var(--gold); border-color:var(--gold); cursor:pointer; box-shadow:0 0 16px rgba(201,162,75,0.4); }
+
+  .order-tray{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+  .order-chip{ background:var(--bark-light); border:1px solid #33463c; color:var(--parchment); font-family:var(--font-display); font-size:13px; letter-spacing:0.04em; text-transform:uppercase; padding:12px 18px; border-radius:6px; cursor:pointer; }
+  .order-chip:hover{ border-color:var(--gold); }
+  .order-slots{ display:flex; gap:10px; margin:14px 0; flex-wrap:wrap; }
+  .order-slot{ width:100px; height:52px; border:1px dashed #33463c; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:12px; color:var(--fog); text-transform:uppercase; }
+  .order-slot.filled{ border-style:solid; border-color:var(--gold); color:var(--gold); }
+
+  .countdown{ text-align:center; font-family:var(--font-display); font-weight:700; font-size:36px; color:var(--burgundy); letter-spacing:0.05em; margin-bottom:10px; }
+
+  .archive-strip{ border-top:1px solid #2a3c33; padding:8px 18px; font-family:var(--font-display); font-size:10px; letter-spacing:0.08em; color:var(--fog); text-transform:uppercase; min-height:16px; }
+  .archive-strip b{ color:var(--gold); }
+
+  #screen-end{ padding:52px 36px; text-align:center; position:relative; z-index:5; }
+  .end-eyebrow{ font-family:var(--font-display); color:var(--gold); font-size:11px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px; }
+  .end-title{ font-family:var(--font-display); color:var(--parchment); font-size:30px; text-transform:uppercase; letter-spacing:0.04em; font-weight:700; margin-bottom:18px; }
+  .end-body{ max-width:560px; margin:0 auto 26px; line-height:1.85; font-size:18px; }
+  .stats{ display:flex; justify-content:center; gap:26px; margin-bottom:30px; flex-wrap:wrap; font-family:var(--font-display); }
+  .stat{ text-align:center; } .stat .num{ color:var(--gold); font-size:19px; font-weight:700; display:block; } .stat .lbl{ color:var(--fog); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; }
+
+  @media (max-width:600px){
+    h1.game-title{ font-size:28px; }
+    .viewport{ padding:20px 16px 6px; }
+    .rune-pads{ gap:8px; } .rune-pad{ height:56px; font-size:10px; }
+    .input-row{ flex-direction:column; align-items:stretch; } .terminal-input{ width:100%; }
+    .coin{ width:70px; height:70px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="embers"></div>
+
+  <div id="screen-title">
+    <div class="eyebrow">A Vowkeeper's Tale</div>
+    <h1 class="game-title">The Antler Crown</h1>
+    <div class="subtitle">Wintersedge has not seen a true spring in three years.</div>
+    <div class="lede">
+      The Antler King's crown was found broken at the tree line, and winter never broke with it.
+      Old Mrend can no longer walk the Wyld herself — so she is handing her oath to you. What you
+      swear at the threshold stone, the Wyld will hold you to. Restore the old Covenant, forge a new
+      one, or end it for good. The choice is yours, chapter by chapter, and the ending remembers
+      everything you chose to become along the way.
+    </div>
+    <div class="callsign-row">
+      <label class="callsign-label" for="callsign-input">Your Name, Vowkeeper</label>
+      <input type="text" id="callsign-input" class="terminal-input callsign-input" placeholder="ENTER YOUR NAME" maxlength="24" autocomplete="off">
+    </div>
+    <div class="roster" id="roster"></div>
+    <button class="power-btn" id="btn-power">Speak the Oath</button>
+    <div class="callsign-error" id="callsign-error"></div>
+    <div class="footnote" id="resume-note"></div>
+    <div class="footnote">A single sitting runs 45&ndash;70 minutes. Four endings, each earned differently.</div>
+  </div>
+
+  <div id="screen-game" style="display:none;">
+    <div class="statusbar">
+      <div class="status-group">
+        <div class="location-tag">Now at: <b id="location-name">&mdash;</b></div>
+        <div class="clock" id="clock">00:00</div>
+        <div class="operator-tag" id="operator-tag">Vowkeeper: &mdash;</div>
+      </div>
+      <div class="status-group">
+        <div class="align-pips" id="align-pips" title="Your leanings so far">
+          <div class="pip gold" id="pip-gold-0"></div><div class="pip gold" id="pip-gold-1"></div><div class="pip gold" id="pip-gold-2"></div>
+          <div class="pip frost" id="pip-frost-0"></div><div class="pip frost" id="pip-frost-1"></div><div class="pip frost" id="pip-frost-2"></div>
+          <div class="pip burg" id="pip-burg-0"></div><div class="pip burg" id="pip-burg-1"></div><div class="pip burg" id="pip-burg-2"></div>
+        </div>
+        <div class="resolve"><span class="resolve-label">Resolve</span><div class="bars" id="bars"></div></div>
+        <button class="iconbtn" id="btn-mute" title="Mute">&#128266;</button>
+        <button class="iconbtn" id="btn-switch" title="Switch Vowkeeper">&#8644;</button>
+        <button class="iconbtn" id="btn-reset" title="Restart">&#8635;</button>
+      </div>
+    </div>
+    <div class="viewport"><div id="chapter-content"></div></div>
+    <div class="archive-strip" id="archive-strip"></div>
+  </div>
+
+  <div id="screen-end" style="display:none;">
+    <div class="end-eyebrow">The Antler Crown</div>
+    <div class="end-title" id="end-title">&mdash;</div>
+    <div class="end-body" id="end-body"></div>
+    <div class="stats" id="end-stats"></div>
+    <button class="power-btn" id="btn-replay">Begin Again</button>
+  </div>
+</div>
+
+<script src="arcade-client.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ================= STATE ================= */
+  var state = {
+    screen: "prologue",
+    align: { restore:0, forge:0, sever:0 },
+    flags: {},
+    hintsLeft: 4,
+    hintsUsedTotal: 0,
+    resolve: 5,
+    startTime: null,
+    fragments: [],
+    ending: null
+  };
+
+  var STORAGE_PREFIX = "antler-crown-";
+  var currentCallsign = "";
+
+  var LOCATIONS = {
+    prologue:"Wintersedge", ch1:"The Threshold Stone", ch2:"The Tithe Bridge",
+    ch3a:"The Hollow Court", ch3b:"The Hollow Court", ch3c:"The Hollow Court",
+    ch4:"The Drowned Grove", ch5a:"Ashwood", ch5b:"Ashwood", ch6:"The Last Gate",
+    branch_restore:"Beyond the Gate", branch_forge:"Beyond the Gate", branch_sever:"Beyond the Gate", branch_balanced:"Beyond the Gate"
+  };
+
+  /* ================= HELPERS ================= */
+  function $(id){ return document.getElementById(id); }
+  function sanitize(name){
+    name = (name||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+    return name || "vowkeeper";
+  }
+  function displayName(name){ return sanitize(name).toUpperCase().replace(/-/g," "); }
+  function storageKey(){ return STORAGE_PREFIX + sanitize(currentCallsign); }
+
+  /* ================= PERSISTENCE (localStorage, arcade-native) ================= */
+  function saveProgress(){
+    try{
+      localStorage.setItem(storageKey(), JSON.stringify({
+        screen: state.screen, align: state.align, flags: state.flags,
+        hintsLeft: state.hintsLeft, hintsUsedTotal: state.hintsUsedTotal,
+        resolve: state.resolve, fragments: state.fragments
+      }));
+    }catch(e){}
+  }
+  function loadProgress(){
+    try{
+      var raw = localStorage.getItem(storageKey());
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function clearProgress(){
+    try{ localStorage.removeItem(storageKey()); }catch(e){}
+  }
+  var API_ENDPOINT = "https://outlaw-arcade-scores.jessica-manuel.workers.dev";
+  function submitScore(payload){
+    payload.timestamp = new Date().toISOString();
+    try{
+      fetch(API_ENDPOINT, {
+        method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+      }).catch(function(){});
+    }catch(e){}
+  }
+  function loadRoster(){
+    try{
+      var names = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf(STORAGE_PREFIX)===0) names.push(k.replace(STORAGE_PREFIX,""));
+      }
+      renderRoster(names.slice(0,6));
+    }catch(e){}
+  }
+  function renderRoster(names){
+    var el = $("roster");
+    if(!names.length){ el.innerHTML=""; return; }
+    el.innerHTML = names.map(function(n){ return '<button type="button" class="chip" data-name="'+n+'">'+displayName(n)+'</button>'; }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".chip"), function(btn){
+      btn.addEventListener("click", function(){
+        $("callsign-input").value = btn.getAttribute("data-name");
+        updateResumeNote();
+      });
+    });
+  }
+  function updateResumeNote(){
+    var val = $("callsign-input").value;
+    var note = $("resume-note");
+    if(!val || !val.trim()){ note.textContent = ""; return; }
+    var key = STORAGE_PREFIX + sanitize(val);
+    try{
+      var raw = localStorage.getItem(key);
+      if(raw){
+        var data = JSON.parse(raw);
+        note.textContent = "A thread of your oath still lingers, " + displayName(val) + " — continuing from " + (LOCATIONS[data.screen]||"where you left off") + ".";
+      } else note.textContent = "";
+    }catch(e){ note.textContent = ""; }
+  }
+
+  /* ================= AUDIO ================= */
+  var audioCtx=null, masterGain=null, muted=false, noiseBufferCache=null;
+  var heartbeatTimer=null, heartbeatBpm=48;
+  function initAudio(){
+    if(audioCtx) return;
+    try{
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      masterGain = audioCtx.createGain(); masterGain.gain.value=0.5; masterGain.connect(audioCtx.destination);
+      startAmbient(); startHeartbeat(46);
+    }catch(e){}
+  }
+  function getNoiseBuffer(){
+    if(noiseBufferCache) return noiseBufferCache;
+    var len = audioCtx.sampleRate*2;
+    var buf = audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+    var d = buf.getChannelData(0);
+    for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*0.6;
+    noiseBufferCache = buf; return buf;
+  }
+  function startAmbient(){
+    if(!audioCtx) return;
+    var o1=audioCtx.createOscillator(), o2=audioCtx.createOscillator();
+    o1.type="sine"; o1.frequency.value=110; o2.type="sine"; o2.frequency.value=110.7;
+    var g=audioCtx.createGain(); g.gain.value=0.035;
+    var lfo=audioCtx.createOscillator(); lfo.frequency.value=0.05;
+    var lfoGain=audioCtx.createGain(); lfoGain.gain.value=0.018;
+    lfo.connect(lfoGain); lfoGain.connect(g.gain);
+    var filt=audioCtx.createBiquadFilter(); filt.type="lowpass"; filt.frequency.value=500;
+    o1.connect(filt); o2.connect(filt); filt.connect(g); g.connect(masterGain);
+    o1.start(); o2.start(); lfo.start();
+    scheduleChime();
+  }
+  function scheduleChime(){
+    var delay = 6000 + Math.random()*9000;
+    setTimeout(function(){
+      if(audioCtx && !muted) playTone(880+Math.random()*220, 1.1, 0.05);
+      scheduleChime();
+    }, delay);
+  }
+  function startHeartbeat(bpm){ heartbeatBpm=bpm; if(heartbeatTimer) clearInterval(heartbeatTimer); loopHeartbeat(); }
+  function loopHeartbeat(){
+    var interval = 60000/heartbeatBpm;
+    heartbeatTimer = setInterval(function(){ thump(0); setTimeout(function(){thump(1);},130); }, interval);
+  }
+  function setHeartbeatBpm(bpm){
+    bpm=Math.max(44,Math.min(120,bpm));
+    if(Math.abs(bpm-heartbeatBpm)<2) return;
+    heartbeatBpm=bpm; if(heartbeatTimer) clearInterval(heartbeatTimer); loopHeartbeat();
+  }
+  function thump(which){
+    if(!audioCtx) return;
+    var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type="sine"; o.frequency.value = which===0?54:44; g.gain.value=0.0001;
+    o.connect(g); g.connect(masterGain);
+    var t=audioCtx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.28,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+    o.start(t); o.stop(t+0.2);
+  }
+  function playGlitch(){
+    if(audioCtx){
+      var o1=audioCtx.createOscillator(), o2=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o1.type="sine"; o2.type="sine"; o1.frequency.value=311; o2.frequency.value=330;
+      g.gain.value=0.0001; o1.connect(g); o2.connect(g); g.connect(masterGain);
+      var t=audioCtx.currentTime;
+      g.gain.exponentialRampToValueAtTime(0.14,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+      o1.start(t); o2.start(t); o1.stop(t+0.5); o2.stop(t+0.5);
+    }
+    var app=$("app"); app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+  }
+  function playSuccess(){
+    if(!audioCtx) return;
+    [523,659,784].forEach(function(f,i){
+      var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type="triangle"; g.gain.value=0.0001; o.connect(g); g.connect(masterGain);
+      var t=audioCtx.currentTime+i*0.1; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+      o.start(t); o.stop(t+0.52);
+    });
+  }
+  function playTone(freq,dur,vol){
+    if(!audioCtx) return;
+    var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type="triangle"; g.gain.value=0.0001; o.connect(g); g.connect(masterGain);
+    var t=audioCtx.currentTime; o.frequency.value=freq;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.2,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.25));
+    o.start(t); o.stop(t+(dur||0.25)+0.02);
+  }
+  function toggleMute(){ muted=!muted; if(masterGain) masterGain.gain.value=muted?0:0.5; $("btn-mute").innerHTML = muted?"&#128263;":"&#128266;"; }
+
+  /* ================= EMBERS ================= */
+  function setupEmbers(){
+    var el = $("embers");
+    for(var i=0;i<18;i++){
+      var e = document.createElement("div");
+      e.className="ember";
+      e.style.left = (Math.random()*100)+"%";
+      e.style.bottom = (-10-Math.random()*40)+"px";
+      e.style.setProperty("--dx",(Math.random()*40-20)+"px");
+      e.style.animationDuration = (8+Math.random()*10)+"s";
+      e.style.animationDelay = (Math.random()*10)+"s";
+      el.appendChild(e);
+    }
+  }
+
+  /* ================= STATUS BAR ================= */
+  function updateStatusBar(){
+    $("location-name").textContent = LOCATIONS[state.screen] || "\u2014";
+    var maxEach = 3;
+    ["gold","frost","burg"].forEach(function(color, idx){
+      var key = idx===0?"restore":idx===1?"forge":"sever";
+      var count = Math.min(maxEach, Math.round(state.align[key]/3));
+      for(var i=0;i<maxEach;i++){
+        var pip = $("pip-"+color+"-"+i);
+        if(pip) pip.classList.toggle("lit", i<count);
+      }
+    });
+    var barsEl=$("bars"); barsEl.innerHTML="";
+    for(var b=1;b<=5;b++){
+      var el=document.createElement("div");
+      el.className="bar"+(b<=state.resolve?" on":"");
+      barsEl.appendChild(el);
+    }
+    var archive=$("archive-strip");
+    archive.innerHTML = state.fragments.length
+      ? "Threads gathered: "+state.fragments.map(function(f){return "<b>"+f+"</b>";}).join("&nbsp;&nbsp;\u00b7&nbsp;&nbsp;")
+      : "Threads gathered: none yet";
+    setHeartbeatBpm(44 + (5-state.resolve)*9);
+    saveProgress();
+  }
+  function damage(n){ state.resolve = Math.max(0, state.resolve-n); updateStatusBar(); }
+  function nudge(path,n){ state.align[path] = (state.align[path]||0) + n; updateStatusBar(); }
+
+  var clockIntervalHandle=null;
+  function clockStart(){
+    state.startTime = Date.now();
+    if(clockIntervalHandle) clearInterval(clockIntervalHandle);
+    clockIntervalHandle = setInterval(function(){
+      var s=Math.floor((Date.now()-state.startTime)/1000);
+      $("clock").textContent = String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+    },1000);
+  }
+
+  /* ================= HINTS ================= */
+  var HINTS = {
+    prologue:"Old Mrend isn't asking for a clever answer. She's asking for the plainest word for the thing you're about to make.",
+    ch2:"Only the coins worth five or less count at all. From those, you need exactly three that add to nine \u2014 there's more than one right combination.",
+    ch4:"Turn the shift slowly and read it aloud as you go \u2014 you'll feel it resolve into words before it looks finished.",
+    ch5b:"Watch the runes, not the count. The sequence always replays slower than it feels like it should.",
+    branch_restore:"The order was in what she told you: root steadies frost, frost tempers flame, flame answers the vow.",
+    branch_forge:"The Widow's grief has to be part of the offer if you promised to honor her \u2014 check what you swore in Ashwood.",
+    branch_sever:"The word you need was the one the Grove's own memory gave back to you, back when the fog first cleared."
+  };
+  function requestHint(key){
+    if(state.hintsLeft<=0) return;
+    state.hintsLeft--; state.hintsUsedTotal++; damage(1);
+    var box=document.querySelector(".hint-box");
+    if(box){ box.textContent="A memory surfaces: "+(HINTS[key]||"Trust what you've already learned."); box.classList.add("show"); }
+    var btn=$("btn-hint");
+    if(btn){ btn.textContent="Recall ("+state.hintsLeft+" left)"; if(state.hintsLeft<=0) btn.disabled=true; }
+  }
+  function hintMarkup(key){
+    return '<div class="input-row" style="margin-top:14px;"><button class="btn ghost" id="btn-hint">Recall</button></div><div class="hint-box"></div>';
+  }
+  function wireHint(key){
+    var btn=$("btn-hint"); if(!btn) return;
+    btn.textContent="Recall ("+state.hintsLeft+" left)";
+    if(state.hintsLeft<=0) btn.disabled=true;
+    btn.addEventListener("click", function(){ requestHint(key); });
+  }
+
+  /* ================= ENGINE ================= */
+  function goTo(screen, fragment){
+    if(fragment) state.fragments.push(fragment);
+    state.screen = screen;
+    saveProgress();
+    var c=$("chapter-content");
+    c.style.transition="opacity 0.3s ease"; c.style.opacity="0";
+    setTimeout(function(){ render(); c.style.opacity="1"; }, 340);
+  }
+  function render(){
+    updateStatusBar();
+    var c=$("chapter-content");
+    var fn = RENDERERS[state.screen];
+    if(!fn){ c.innerHTML="<p>The path ends here for now.</p>"; return; }
+    fn(c);
+  }
+  function choiceHTML(list){
+    return '<div class="choices">'+list.map(function(ch,i){
+      return '<button class="choice-btn" data-i="'+i+'">'+ch.text+'</button>';
+    }).join("")+'</div>';
+  }
+  function wireChoices(list, cb){
+    Array.prototype.forEach.call(document.querySelectorAll(".choice-btn"), function(btn){
+      btn.addEventListener("click", function(){
+        var i=parseInt(btn.getAttribute("data-i"),10);
+        cb(list[i], i);
+      });
+    });
+  }
+
+  /* ================= SCREEN: PROLOGUE ================= */
+  function renderPrologue(c){
+    c.innerHTML =
+      '<div class="ch-eyebrow">Prologue</div><h2 class="ch-title">The Broken Crown</h2>'+
+      '<div class="ch-body">Three winters ago, the Antler King stopped walking his boundary. The frost that should have broken by Long Thaw never did. Wintersedge has been hungry ever since.</div>'+
+      '<div class="ch-body">They found his crown at the tree line &mdash; antler and green witch-fire, split clean down the center, the fire gone dark. Old Mrend has carried a Vowkeeper\'s oath for forty years and never once been asked to use it for anything this large. She\'s too old to walk the Wyld now. So she\'s giving the oath to you.</div>'+
+      '<div class="ch-body"><span class="speaker">Old Mrend</span>&ldquo;A vow binds the one who speaks it,&rdquo; she says, pressing the broken half of a small antler token into your palm. &ldquo;Speak carefully. The Wyld will hold you to every word. But first &mdash; tell me you understand what you\'re carrying.&rdquo;</div>'+
+      '<div class="panel"><div class="ch-body" style="margin-bottom:10px;"><i>&ldquo;Name the thing that is taken before it is given, spent before it is spoken, and outlives the mouth that made it.&rdquo;</i></div>'+
+      '<div class="input-row"><input type="text" class="terminal-input" id="p-input" placeholder="YOUR ANSWER"><button class="btn" id="p-submit">Answer</button></div>'+
+      '<div class="feedback" id="p-feedback"></div></div>'+
+      hintMarkup("prologue");
+    wireHint("prologue");
+    var accepted = ["vow","a vow","oath","an oath","promise","a promise","your word","word"];
+    function submit(){
+      var val = $("p-input").value.trim().toLowerCase();
+      var fb = $("p-feedback");
+      if(accepted.indexOf(val)>-1 || accepted.some(function(a){return val.indexOf(a)>-1 && val.length<20;})){
+        fb.textContent="Old Mrend nods slowly."; fb.className="feedback good"; playSuccess();
+        $("p-submit").disabled=true;
+        setTimeout(function(){ goTo("ch1","Oath Understood"); }, 900);
+      } else {
+        fb.textContent="She waits for a truer answer."; fb.className="feedback bad"; playGlitch(); damage(1);
+      }
+    }
+    $("p-submit").addEventListener("click", submit);
+    $("p-input").addEventListener("keydown", function(e){ if(e.key==="Enter") submit(); });
+  }
+
+  /* ================= SCREEN: CH1 ================= */
+  function renderCh1(c){
+    var choices = [
+      {text:"\u201cI swear to mend what was broken, and see the old Covenant whole again.\u201d", path:"restore", n:2},
+      {text:"\u201cI swear only to learn the truth, and to strike whatever bargain keeps Wintersedge fed.\u201d", path:"forge", n:2},
+      {text:"\u201cI swear nothing yet. I\u2019ll decide what I owe the Wyld once I understand what it owes me.\u201d", path:"sever", n:2}
+    ];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter One</div><h2 class="ch-title">The Threshold Oath</h2>'+
+      '<div class="ch-body">The tree line isn\'t a line at all up close &mdash; more a held breath, the air going thick and green-smelling a full ten paces before the first Wyld oak. A boundary stone waits there, half-sunk in old snow, carved with a single open hand.</div>'+
+      '<div class="ch-body">This is the last threshold where the old rules still apply. Whatever oath you make standing on this stone, the Wyld will hear it and hold you to it, the way it\'s held every Vowkeeper before you.</div>'+
+      '<div class="ch-body"><b>What do you swear?</b></div>'+
+      choiceHTML(choices);
+    wireChoices(choices, function(ch){
+      nudge(ch.path, ch.n);
+      goTo("ch1b");
+    });
+  }
+  function renderCh1b(c){
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter One</div><h2 class="ch-title">The Threshold Oath</h2>'+
+      '<div class="ch-body">The boundary stone warms under your palm &mdash; once, like a held breath let go. The green-smelling air splits open in front of you, and Wintersedge disappears behind a wall of black branches. You\'re standing in the Wyld now. There\'s no threshold left to step back across.</div>'+
+      '<button class="continue-btn" id="cont">Walk On</button>';
+    $("cont").addEventListener("click", function(){ goTo("ch2","Oath Sworn"); });
+  }
+
+  /* ================= SCREEN: CH2 — TITHE BRIDGE (coins) ================= */
+  var COINS = [
+    {name:"Iron", val:4}, {name:"Salt", val:3}, {name:"Bone", val:5}, {name:"Ash", val:2},
+    {name:"Antler", val:1}, {name:"Moss", val:6}, {name:"Copper", val:7}
+  ];
+  var ch2Selected = [];
+  function renderCh2(c){
+    ch2Selected = [];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Two</div><h2 class="ch-title">The Tithe Bridge</h2>'+
+      '<div class="ch-body">A river the color of tarnished silver blocks the path, and the only crossing is a bridge of woven root and bone, guarded by something that used to be a bridge-troll and is now mostly moss wearing a shape. It doesn\'t move to stop you. It just holds out seven coins, and speaks in a voice like stones settling.</div>'+
+      '<div class="ch-body"><i>&ldquo;The bridge takes the weight of sorrow. Three coins, no more, no fewer. None worth more than five. Choose wrong and the water decides what you\'re worth instead.&rdquo;</i></div>'+
+      '<div class="panel"><div class="coin-grid" id="coin-grid">'+
+      COINS.map(function(coin,i){ return '<div class="coin" data-i="'+i+'"><div class="cname">'+coin.name+'</div><div class="cval">'+coin.val+'</div></div>'; }).join("")+
+      '</div><div class="input-row"><button class="btn" id="ch2-submit">Pay the Toll</button></div>'+
+      '<div class="feedback" id="ch2-feedback"></div></div>'+
+      hintMarkup("ch2");
+    wireHint("ch2");
+    Array.prototype.forEach.call(document.querySelectorAll(".coin"), function(el){
+      el.addEventListener("click", function(){
+        var i=parseInt(el.getAttribute("data-i"),10);
+        var idx=ch2Selected.indexOf(i);
+        if(idx>-1){ ch2Selected.splice(idx,1); el.classList.remove("selected"); }
+        else { if(ch2Selected.length>=3){ return; } ch2Selected.push(i); el.classList.add("selected"); }
+      });
+    });
+    $("ch2-submit").addEventListener("click", function(){
+      var fb=$("ch2-feedback");
+      if(ch2Selected.length!==3){ fb.textContent="Choose exactly three coins."; fb.className="feedback bad"; return; }
+      var vals = ch2Selected.map(function(i){ return COINS[i].val; });
+      var sum = vals.reduce(function(a,b){return a+b;},0);
+      var allValid = vals.every(function(v){ return v<=5; });
+      if(allValid && sum===9){
+        fb.textContent="The bridge accepts the toll."; fb.className="feedback good"; playSuccess();
+        $("ch2-submit").disabled=true;
+        setTimeout(function(){ goTo("ch3a","Fair Toll Paid"); }, 900);
+      } else {
+        fb.textContent="The water stirs. Wrong weight."; fb.className="feedback bad"; playGlitch(); damage(1);
+      }
+    });
+  }
+
+  /* ================= SCREEN: CH3 — HOLLOW COURT (dialogue) ================= */
+  function renderCh3a(c){
+    var choices = [
+      {text:"\u201cWe blamed ourselves. We must have broken the Covenant somehow.\u201d", path:"restore", n:1, reply:"\u201cGuilt,\u201d she says, almost gently. \u201cThat's a very human answer. Convenient, too \u2014 it means you don't have to ask if I did anything wrong.\u201d"},
+      {text:"\u201cBlame doesn't feed anyone. We just want to know what it costs to fix it.\u201d", path:"forge", n:1, reply:"\u201cPractical,\u201d she says. \u201cI like practical. It rarely lasts, but I like it.\u201d"},
+      {text:"\u201cHonestly? We blamed you. The Wyld's never once paid for breaking something.\u201d", path:"sever", n:1, reply:"\u201cBold, for someone standing in my clearing,\u201d she says, and doesn't sound displeased. \u201cAt least you're honest.\u201d"}
+    ];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Three</div><h2 class="ch-title">The Hollow Court</h2>'+
+      '<div class="ch-body">Past the bridge, the Wyld opens into a clearing ringed with standing stones, and the Grey Marchioness is waiting on a throne made of a single fallen tree, still rooted, still slowly growing around her. She\'s the nearest thing the Wyld has to someone you can actually talk to. She already knows why you\'re here. She always does.</div>'+
+      '<div class="ch-body"><span class="speaker">The Grey Marchioness</span>&ldquo;The Antler King is not dead,&rdquo; she says, before you\'ve asked. &ldquo;Dead would be simpler. Sit. Tell me &mdash; when your king vanished and your winters stopped ending, did Wintersedge blame the Wyld, or itself?&rdquo;</div>'+
+      choiceHTML(choices);
+    wireChoices(choices, function(ch){
+      nudge(ch.path, ch.n);
+      state.flags._ch3reply = ch.reply;
+      goTo("ch3b");
+    });
+  }
+  function renderCh3b(c){
+    var choices = [
+      {text:"\u201cThe old Covenant kept us alive for three hundred years. That's satisfaction enough.\u201d", path:"restore", n:2, flag:"restore_content"},
+      {text:"\u201cNo. I want more than it gave us. I just don't know yet what that costs.\u201d", path:"forge", n:2, flag:"admitted_more"},
+      {text:"\u201cI want us free of needing your permission to survive at all.\u201d", path:"sever", n:2, flag:"admitted_more"}
+    ];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Three</div><h2 class="ch-title">The Hollow Court</h2>'+
+      '<div class="ch-body"><span class="speaker">The Grey Marchioness</span>'+state.flags._ch3reply+'</div>'+
+      '<div class="ch-body">&ldquo;Here is what I\'ll tell you for free, because it costs me nothing: the King didn\'t break the Covenant. He tried to change it &mdash; widen it, past what either side had agreed to &mdash; and something underneath the Wyld didn\'t care for the amendment. That is all the free truth I have. The rest costs a question of mine, answered honestly.&rdquo;</div>'+
+      '<div class="ch-body">&ldquo;So: honestly. If restoring the old Covenant meant Wintersedge kept exactly what it had before &mdash; no more, no less, forever &mdash; would that satisfy you? Or do you actually want something the old Covenant never gave you?&rdquo;</div>'+
+      choiceHTML(choices);
+    wireChoices(choices, function(ch){
+      nudge(ch.path, ch.n);
+      if(ch.flag) state.flags[ch.flag]=true;
+      goTo("ch3c");
+    });
+  }
+  function renderCh3c(c){
+    var reactive = state.flags.restore_content
+      ? "&ldquo;You said the old Covenant was enough,&rdquo; she says. &ldquo;I believe you mean it. That's rarer than you'd think.&rdquo;"
+      : "&ldquo;You admitted you wanted something the old ways never gave you,&rdquo; she says. &ldquo;Good. Now I know you're not here to be lied to gently.&rdquo;";
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Three</div><h2 class="ch-title">The Hollow Court</h2>'+
+      '<div class="ch-body">She studies you a long moment &mdash; the specific, unhurried way something several centuries old studies something that isn\'t.</div>'+
+      '<div class="ch-body"><span class="speaker">The Grey Marchioness</span>'+reactive+'</div>'+
+      '<div class="ch-body">&ldquo;The King went looking for whatever lives underneath the Wyld &mdash; older than the Covenant, older than me. He went into the Drowned Grove and he did not come back the same, if he came back at all. That\'s where you\'re going next. I\'d wish you luck, but luck isn\'t really a Wyld sort of thing.&rdquo;</div>'+
+      '<button class="continue-btn" id="cont">Go to the Drowned Grove</button>';
+    $("cont").addEventListener("click", function(){ goTo("ch4","Marchioness's Truth"); });
+  }
+
+  /* ================= SCREEN: CH4 — DROWNED GROVE (cipher) ================= */
+  var ch4Plain = "HE TRIED TO FREE THE GROVE";
+  var ch4Shift = 14;
+  function caesar(text,n){
+    var out="";
+    for(var i=0;i<text.length;i++){
+      var c=text[i], code=c.charCodeAt(0);
+      out += (code>=65&&code<=90) ? String.fromCharCode(((code-65+n)%26+26)%26+65) : c;
+    }
+    return out;
+  }
+  function renderCh4(c){
+    var cipher = caesar(ch4Plain, ch4Shift);
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Four</div><h2 class="ch-title">The Drowned Grove</h2>'+
+      '<div class="ch-body">The Grove isn\'t drowned in water. It\'s drowned in something thicker &mdash; old magic gone stagnant, pooled between the roots like standing fog. Faces surface in it sometimes, and sink again before you can be sure you saw them.</div>'+
+      '<div class="ch-body">Something here still remembers what happened to the Antler King. It\'s willing to show you &mdash; but the vision comes to you scrambled, the way memory does when it\'s been underwater a long time. Turn the old tongue back into words.</div>'+
+      '<div class="panel"><div class="cipher-text" id="cipher-text">'+cipher+'</div>'+
+      '<div class="decode-preview" id="decode-preview">'+cipher+'</div>'+
+      '<input type="range" min="0" max="25" value="0" id="ch4-slider">'+
+      '<div class="shift-readout" id="shift-readout">TURN: 0</div>'+
+      '<button class="lock-btn" id="ch4-lock" disabled>Speak the Memory</button></div>'+
+      '<div class="feedback" id="ch4-feedback"></div>'+
+      hintMarkup("ch4");
+    wireHint("ch4");
+    var slider=$("ch4-slider"), preview=$("decode-preview"), lockBtn=$("ch4-lock");
+    function update(){
+      var v=parseInt(slider.value,10);
+      var decoded=caesar(cipher,v);
+      preview.textContent=decoded;
+      $("shift-readout").textContent="TURN: "+v;
+      var correct = decoded===ch4Plain;
+      preview.classList.toggle("locked", correct);
+      lockBtn.classList.toggle("enabled", correct);
+      lockBtn.disabled=!correct;
+    }
+    slider.addEventListener("input", update); update();
+    lockBtn.addEventListener("click", function(){
+      if(lockBtn.disabled) return;
+      var fb=$("ch4-feedback");
+      fb.textContent="\u201cHe tried to free the Grove,\u201d you say aloud, and the fog ripples like something exhaling.";
+      fb.className="feedback good"; playSuccess(); lockBtn.disabled=true;
+      state.flags.learned_truth=true;
+      setTimeout(function(){ goTo("ch5a","He Tried To Free The Grove"); }, 1000);
+    });
+  }
+
+  /* ================= SCREEN: CH5a — WIDOW CHOICE ================= */
+  function renderCh5a(c){
+    var choices=[
+      {text:"\u201cI'm sorry. Whatever the Covenant was supposed to be, it wasn't supposed to cost people who never agreed to it.\u201d", path:"restore", n:1, flag:"honored_widow"},
+      {text:"\u201cThat's exactly the kind of cost I'm trying to renegotiate. Help me understand it and I'll try to make sure it doesn't happen again.\u201d", path:"forge", n:1},
+      {text:"\u201cThen maybe a Covenant that takes people without their vote doesn't deserve to exist at all.\u201d", path:"sever", n:1, flag:"hardened"}
+    ];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Five</div><h2 class="ch-title">The Widow of Ashwood</h2>'+
+      '<div class="ch-body">Past the Grove, the trees thin into a stand of burned birches, white and black and silent, and a woman is sitting among them who is very clearly not entirely a woman anymore &mdash; something about the way the birch-shadows move with her instead of around her. Wintersedge folk call her the Widow of Ashwood. Nobody remembers her name from before.</div>'+
+      '<div class="ch-body"><span class="speaker">The Widow</span>&ldquo;The old Covenant took my husband as a fair trade, thirty years back,&rdquo; she says, not looking up. &ldquo;Fair, they called it. He didn\'t get a vote. Neither did I.&rdquo; She finally looks at you. &ldquo;You\'re here about the King. Fine. I\'ll help you &mdash; but you\'ll sit the mourning rite with me first. It\'s the only price I ask, and it isn\'t optional.&rdquo;</div>'+
+      choiceHTML(choices);
+    wireChoices(choices, function(ch){
+      nudge(ch.path, ch.n);
+      if(ch.flag) state.flags[ch.flag]=true;
+      goTo("ch5b");
+    });
+  }
+
+  /* ================= SCREEN: CH5b — MOURNING RITE (rune pattern) ================= */
+  var RUNES=[{label:"ASH",freq:262},{label:"ROOT",freq:330},{label:"SALT",freq:392},{label:"EMBER",freq:466}];
+  var rp = { round:0, maxRounds:5, seq:[], userIndex:0, accepting:false };
+  var rpTimeoutHandle=null;
+  function renderCh5b(c){
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Five</div><h2 class="ch-title">The Mourning Rite</h2>'+
+      '<div class="ch-body">She doesn\'t answer, just begins the rite &mdash; four old signs, repeated and lengthened, the way grief repeats and lengthens. &ldquo;Match it,&rdquo; she says. &ldquo;Grief that isn\'t witnessed properly just curdles. I won\'t have that happen to him again.&rdquo;</div>'+
+      '<div class="round-readout" id="rp-round">Round 0 / '+rp.maxRounds+'</div>'+
+      '<div class="rune-pads" id="rp-pads">'+RUNES.map(function(r,i){return '<button class="rune-pad" data-i="'+i+'">'+r.label+'</button>';}).join("")+'</div>'+
+      '<div class="timerbar-track"><div class="timerbar-fill" id="rp-timerfill"></div></div>'+
+      '<div class="feedback" id="rp-feedback"></div>'+
+      hintMarkup("ch5b");
+    wireHint("ch5b");
+    rp = { round:0, maxRounds:5, seq:[], userIndex:0, accepting:false };
+    Array.prototype.forEach.call(document.querySelectorAll("#rp-pads .rune-pad"), function(pad){
+      pad.addEventListener("click", function(){
+        if(!rp.accepting) return;
+        var i=parseInt(pad.getAttribute("data-i"),10);
+        handleRunePress(i, pad);
+      });
+    });
+    nextRpRound();
+  }
+  function nextRpRound(){
+    rp.round++; $("rp-round").textContent="Round "+rp.round+" / "+rp.maxRounds;
+    rp.seq.push(Math.floor(Math.random()*4)); rp.userIndex=0; rp.accepting=false;
+    playRpSequence();
+  }
+  function playRpSequence(){
+    var pads=document.querySelectorAll("#rp-pads .rune-pad");
+    var i=0, speed=Math.max(420,700-rp.round*35);
+    var iv=setInterval(function(){
+      if(i>0) pads[rp.seq[i-1]].classList.remove("lit");
+      if(i<rp.seq.length){
+        var idx=rp.seq[i]; pads[idx].classList.add("lit"); playTone(RUNES[idx].freq,0.22,0.18); i++;
+      } else {
+        clearInterval(iv);
+        setTimeout(function(){
+          pads.forEach(function(p){p.classList.remove("lit");});
+          rp.accepting=true; startRpTimer();
+        }, speed);
+      }
+    }, speed);
+  }
+  function startRpTimer(){
+    var fill=$("rp-timerfill"); if(!fill) return;
+    fill.style.transition="none"; fill.style.width="100%"; void fill.offsetWidth;
+    var duration=2700; fill.style.transition="width "+duration+"ms linear"; fill.style.width="0%";
+    if(rpTimeoutHandle) clearTimeout(rpTimeoutHandle);
+    rpTimeoutHandle=setTimeout(function(){ if(rp.accepting) rpFail(); }, duration);
+  }
+  function handleRunePress(i,padEl){
+    padEl.classList.add("lit"); playTone(RUNES[i].freq,0.18,0.16);
+    setTimeout(function(){padEl.classList.remove("lit");},180);
+    if(i===rp.seq[rp.userIndex]){
+      rp.userIndex++;
+      if(rp.userIndex>=rp.seq.length){
+        rp.accepting=false; if(rpTimeoutHandle) clearTimeout(rpTimeoutHandle);
+        var fb=$("rp-feedback");
+        if(rp.round>=rp.maxRounds){
+          fb.textContent="The rite completes. Something in the birches loosens."; fb.className="feedback good";
+          setTimeout(function(){ goTo("ch6","Rite Witnessed"); }, 1000);
+        } else { fb.textContent="Sign held."; fb.className="feedback good"; setTimeout(nextRpRound,700); }
+      } else { startRpTimer(); }
+    } else { rpFail(); }
+  }
+  function rpFail(){
+    rp.accepting=false; if(rpTimeoutHandle) clearTimeout(rpTimeoutHandle);
+    playGlitch(); damage(1);
+    var fb=$("rp-feedback"); fb.textContent="The sign breaks. Begin the round again."; fb.className="feedback bad";
+    rp.userIndex=0;
+    setTimeout(function(){ fb.textContent=""; playRpSequence(); }, 900);
+  }
+
+  /* ================= SCREEN: CH6 — LAST GATE (final choice + routing) ================= */
+  function renderCh6(c){
+    var choices=[
+      {text:"\u201cThe Covenant should be restored exactly as it was. Whatever's under the Wyld, it was bound before. It should be bound again.\u201d", path:"restore", n:3},
+      {text:"\u201cThe Covenant should be renegotiated \u2014 properly this time, with everyone who pays for it getting an actual say.\u201d", path:"forge", n:3},
+      {text:"\u201cNo more Covenant. No more binding things that didn't agree to be bound \u2014 not the Wyld's prisoner, and not Wintersedge either.\u201d", path:"sever", n:3}
+    ];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Chapter Six</div><h2 class="ch-title">The Last Gate</h2>'+
+      '<div class="ch-body">She doesn\'t answer, just begins the rite. The Grove\'s roots finally give way to open ground &mdash; a hollow at the center of the Wyld, and at the center of the hollow, a gate that isn\'t built from anything so much as it\'s grown, antler and black iron and green fire all knotted together, exactly like the King\'s broken crown, just enormous. Whatever\'s underneath the Wyld is on the other side of it.</div>'+
+      '<div class="ch-body">You\'ve heard three different truths since you crossed the threshold stone, from three people who each wanted something different from you. Whatever you decide here, the Gate is listening &mdash; same as the boundary stone was, all the way back at the start. It will hold you to it.</div>'+
+      '<div class="ch-body"><b>What do you tell the Gate?</b></div>'+
+      choiceHTML(choices);
+    wireChoices(choices, function(ch){
+      nudge(ch.path, ch.n);
+      routeFromGate();
+    });
+  }
+  function routeFromGate(){
+    var vals=[{k:"restore",v:state.align.restore},{k:"forge",v:state.align.forge},{k:"sever",v:state.align.sever}];
+    vals.sort(function(a,b){return b.v-a.v;});
+    var top=vals[0].v, third=vals[2].v, total=vals[0].v+vals[1].v+vals[2].v;
+    var balanced = (top-third)<=2 && total>=6;
+    var path = balanced ? "balanced" : vals[0].k;
+    state.flags.path = path;
+    goTo("branch_"+path, "The Gate Answered");
+  }
+
+  /* ================= BRANCH: RESTORE — order puzzle ================= */
+  var ORDER_CORRECT = ["Root","Frost","Flame","Vow"];
+  var orderPicked = [];
+  function renderBranchRestore(c){
+    orderPicked = [];
+    var pieces = ["Vow","Flame","Root","Frost"];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Beyond the Gate</div><h2 class="ch-title">Mend the Crown</h2>'+
+      '<div class="ch-body">The Gate recognizes an old promise being kept and eases open on its own, into a chamber where the shattered halves of the Antler King\'s crown are still lying exactly where they fell &mdash; and something vast and patient is curled in the dark past them, watching, waiting to see if you\'re serious.</div>'+
+      '<div class="ch-body">Mending the crown isn\'t a metaphor here. The old rite goes <b>root to frost, frost to flame, flame to vow.</b> Old magic doesn\'t care that you\'ve never done this before. It only cares that you do it in the right order.</div>'+
+      '<div class="panel"><div class="order-tray" id="order-tray">'+
+      pieces.map(function(p){ return '<button class="order-chip" data-p="'+p+'">'+p+'</button>'; }).join("")+
+      '</div><div class="order-slots" id="order-slots">'+
+      [0,1,2,3].map(function(i){ return '<div class="order-slot" id="slot-'+i+'">&mdash;</div>'; }).join("")+
+      '</div><div class="input-row"><button class="btn" id="order-submit">Mend the Crown</button><button class="btn ghost" id="order-clear">Clear</button></div>'+
+      '<div class="feedback" id="order-feedback"></div></div>'+
+      hintMarkup("branch_restore");
+    wireHint("branch_restore");
+    function refreshSlots(){
+      for(var i=0;i<4;i++){
+        var slot=$("slot-"+i);
+        if(orderPicked[i]){ slot.textContent=orderPicked[i]; slot.classList.add("filled"); }
+        else { slot.textContent="\u2014"; slot.classList.remove("filled"); }
+      }
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("#order-tray .order-chip"), function(chip){
+      chip.addEventListener("click", function(){
+        if(orderPicked.length>=4) return;
+        orderPicked.push(chip.getAttribute("data-p"));
+        refreshSlots();
+      });
+    });
+    $("order-clear").addEventListener("click", function(){ orderPicked=[]; refreshSlots(); });
+    $("order-submit").addEventListener("click", function(){
+      var fb=$("order-feedback");
+      if(orderPicked.length!==4){ fb.textContent="Place all four fragments first."; fb.className="feedback bad"; return; }
+      var correct = orderPicked.every(function(p,i){ return p===ORDER_CORRECT[i]; });
+      if(correct){
+        fb.textContent="The crown knits whole."; fb.className="feedback good"; playSuccess();
+        $("order-submit").disabled=true;
+        setTimeout(function(){ finishGame("restore"); }, 1000);
+      } else {
+        fb.textContent="The fragments resist. Wrong order."; fb.className="feedback bad"; playGlitch(); damage(1);
+        orderPicked=[]; refreshSlots();
+      }
+    });
+  }
+
+  /* ================= BRANCH: FORGE — bargain terms ================= */
+  var TERMS = [
+    {name:"Open Trade", val:5}, {name:"Free Passage", val:4}, {name:"Shared Harvest", val:3},
+    {name:"The Widow's Grief", val:2, key:"widow"}, {name:"A Yearly Name", val:6}, {name:"Silence", val:1}
+  ];
+  var termsPicked = [];
+  function renderBranchForge(c){
+    termsPicked = [];
+    var honored = !!state.flags.honored_widow;
+    c.innerHTML =
+      '<div class="ch-eyebrow">Beyond the Gate</div><h2 class="ch-title">Broker the Bargain</h2>'+
+      '<div class="ch-body">The Gate doesn\'t open so much as it starts negotiating with you immediately &mdash; a presence on the other side, ancient and unhurried, laying out terms in flashes of image rather than words: what it wants, what it\'ll trade, what it\'ll never agree to.</div>'+
+      '<div class="ch-body">Build an offer worth between <b>10 and 13</b>, all together.'+(honored?' You promised the Widow her grief would be honored &mdash; <b>&ldquo;The Widow\'s Grief&rdquo; has to be part of this offer.</b>':'')+'</div>'+
+      '<div class="panel"><div class="coin-grid" id="term-grid">'+
+      TERMS.map(function(t,i){ return '<div class="coin" style="width:110px;height:96px;border-radius:8px;" data-i="'+i+'"><div class="cname" style="text-align:center;">'+t.name+'</div><div class="cval">'+t.val+'</div></div>'; }).join("")+
+      '</div><div class="input-row"><button class="btn" id="term-submit">Offer the Bargain</button></div>'+
+      '<div class="feedback" id="term-feedback"></div></div>'+
+      hintMarkup("branch_forge");
+    wireHint("branch_forge");
+    Array.prototype.forEach.call(document.querySelectorAll("#term-grid .coin"), function(el){
+      el.addEventListener("click", function(){
+        var i=parseInt(el.getAttribute("data-i"),10);
+        var idx=termsPicked.indexOf(i);
+        if(idx>-1){ termsPicked.splice(idx,1); el.classList.remove("selected"); }
+        else { termsPicked.push(i); el.classList.add("selected"); }
+      });
+    });
+    $("term-submit").addEventListener("click", function(){
+      var fb=$("term-feedback");
+      var sum = termsPicked.reduce(function(a,i){ return a+TERMS[i].val; },0);
+      var hasWidow = termsPicked.some(function(i){ return TERMS[i].key==="widow"; });
+      var needsWidow = honored;
+      if(sum>=10 && sum<=13 && (!needsWidow || hasWidow)){
+        fb.textContent="The offer lands."; fb.className="feedback good"; playSuccess();
+        $("term-submit").disabled=true;
+        setTimeout(function(){ finishGame("forge"); }, 1000);
+      } else {
+        fb.textContent = needsWidow && !hasWidow ? "The offer feels dishonest without the Widow's terms." : "The weight is wrong. Try again.";
+        fb.className="feedback bad"; playGlitch(); damage(1);
+      }
+    });
+  }
+
+  /* ================= BRANCH: SEVER — countdown word ================= */
+  var severRemaining=90, severInterval=null;
+  function renderBranchSever(c){
+    c.innerHTML =
+      '<div class="ch-eyebrow">Beyond the Gate</div><h2 class="ch-title">Unmake the Vow</h2>'+
+      '<div class="ch-body">The Gate doesn\'t open. It starts coming apart instead &mdash; the whole knotted structure of antler and iron and witch-fire unraveling at once, because you didn\'t ask it to open, you told it to stop existing, and apparently it\'s very bad at existing once you say that with enough conviction.</div>'+
+      '<div class="ch-body">Whatever\'s underneath the Wyld is coming with it. If you\'re going to add any condition to this &mdash; any single thread of the old binding you want to keep &mdash; now is the only time it\'ll listen. What do you keep free?</div>'+
+      '<div class="countdown" id="sv-countdown">01:30</div>'+
+      '<div class="input-row"><input type="text" class="terminal-input" id="sv-input" placeholder="WHAT DO YOU KEEP?"><button class="btn" id="sv-submit">Speak It</button></div>'+
+      '<div class="feedback" id="sv-feedback"></div>'+
+      hintMarkup("branch_sever");
+    wireHint("branch_sever");
+    severRemaining=90;
+    function updateClock(){
+      var el=$("sv-countdown"); if(!el) return;
+      el.textContent = String(Math.floor(severRemaining/60)).padStart(2,"0")+":"+String(severRemaining%60).padStart(2,"0");
+    }
+    function tick(){
+      severRemaining--; updateClock();
+      if(severRemaining<=0){
+        clearInterval(severInterval);
+        var fb=$("sv-feedback"); fb.textContent="The window nearly closes \u2014 reopening."; fb.className="feedback bad";
+        playGlitch(); damage(1);
+        setTimeout(function(){
+          if(state.screen==="branch_sever"){ severRemaining=90; updateClock(); fb.textContent="It listens once more."; fb.className="feedback good"; severInterval=setInterval(tick,1000); }
+        }, 1200);
+      }
+    }
+    updateClock(); if(severInterval) clearInterval(severInterval); severInterval=setInterval(tick,1000);
+    function submit(){
+      var val=$("sv-input").value.trim().toLowerCase();
+      var fb=$("sv-feedback");
+      if(val.indexOf("grove")>-1){
+        clearInterval(severInterval);
+        fb.textContent="The thread catches."; fb.className="feedback good"; playSuccess();
+        $("sv-submit").disabled=true;
+        setTimeout(function(){ finishGame("sever"); }, 1000);
+      } else {
+        fb.textContent="The unmaking doesn't recognize that."; fb.className="feedback bad"; playGlitch(); damage(1);
+      }
+    }
+    $("sv-submit").addEventListener("click", submit);
+    $("sv-input").addEventListener("keydown", function(e){ if(e.key==="Enter") submit(); });
+  }
+
+  /* ================= BRANCH: BALANCED — confirm ================= */
+  function renderBranchBalanced(c){
+    var choices=[
+      {text:"\u201cYes. I mean all three, all the way through.\u201d", val:true},
+      {text:"\u201cI don't know. But I'm not choosing just one.\u201d", val:false}
+    ];
+    c.innerHTML =
+      '<div class="ch-eyebrow">Beyond the Gate</div><h2 class="ch-title">The Vow Between</h2>'+
+      '<div class="ch-body">The Gate hesitates &mdash; actually hesitates, which you get the strong impression it has never done before. You didn\'t commit hard enough to any single truth for it to know which one to hold you to. That should probably feel like failure. Instead, the thing waiting past the Gate seems almost&hellip; interested.</div>'+
+      '<div class="ch-body">&ldquo;No one\'s ever asked me all three at once,&rdquo; it says, in a voice like the space between growth rings. &ldquo;Restore, and Bargain, and Release. You\'d have to mean all three, all the way through, and most things aren\'t built to.&rdquo; A pause. &ldquo;Are you?&rdquo;</div>'+
+      choiceHTML(choices);
+    wireChoices(choices, function(ch){
+      state.flags.balanced_certain = ch.val;
+      finishGame("balanced");
+    });
+  }
+
+  /* ================= ENDINGS ================= */
+  var ENDINGS = {
+    restore: {
+      title:"The Mended Crown",
+      body:"The crown knits itself whole in your hands, root to frost to flame to vow, and green fire wakes in it again for the first time in three winters. The vast patient thing in the dark recedes &mdash; not gone, just bound again, the way it was always meant to be.<br><br>Winter breaks over Wintersedge within the week. People will say a new Antler King walked the boundary that spring, though nobody local remembers electing one. Old Mrend, when you tell her, just nods like she expected exactly this. &ldquo;The old ways work because people keep choosing them,&rdquo; she says. &ldquo;Even when nobody's forcing them to anymore. Especially then.&rdquo;"
+    },
+    forge: {
+      title:"The Fair Bargain",
+      body:"The offer lands. You feel it land &mdash; a kind of settling, like a scale finding balance after decades of sitting tilted. The thing beneath the Wyld doesn't love the new terms. It agrees to them, which from something that old is apparently the more honest response.<br><br>The Covenant that governs Wintersedge now isn't the one that stood for three hundred years. It's newer, stranger, occasionally renegotiated at Old Mrend's insistence every decade whether the Wyld likes it or not. Winter still ends on time. Nobody's entirely sure they got the better end of the deal. Nobody's entirely sure they didn't, either."
+    },
+    sever: {
+      title:"The Free Grove",
+      body:"The Vow comes apart in your hands, and for about four seconds the whole Wyld holds its breath along with you, waiting to see what a world with no Covenant at all actually looks like. Then the thread you kept catches &mdash; the Grove, and only the Grove, slipping free of whatever's under it while the rest of the old binding scatters to nothing.<br><br>Wintersedge isn't protected by an old bargain anymore. It isn't threatened by one either. What grows back at the tree line over the next few years isn't quite Wyld and isn't quite anything that has a name yet. Old Mrend doesn't call herself a Vowkeeper after that. She says there's nothing left to keep a vow with. She doesn't sound sorry about it."
+    },
+    balanced: {
+      title:"The Vow Between",
+      body:"You mean all three, all the way through, which shouldn't be possible and apparently is exactly rare enough that the thing behind the Gate has never had to plan for it. What comes out of the unmaking isn't a restoration or a bargain or a release. It's something that hasn't existed before &mdash; a Covenant that renews itself only if every side keeps choosing it, freely, every single year, with a real door out for anyone who stops agreeing.<br><br>Old Mrend has no name for what you've made. Neither does the thing under the Grove. Wintersedge just calls it the Vow Between, and mostly stops asking questions about the winter that finally, genuinely ends.<br><br><i>&mdash; a rare path. Few Vowkeepers commit fully enough to find it.</i>"
+    }
+  };
+  function finishGame(path){
+    state.ending = path;
+    var elapsed = Math.floor((Date.now()-state.startTime)/1000);
+    submitScore({
+      game:"the-antler-crown", operator: sanitize(currentCallsign),
+      metric:"seconds", value: elapsed, outcome:"completed",
+      meta:{ ending: ENDINGS[path].title, align: state.align, hintsUsed: state.hintsUsedTotal }
+    });
+    showEnd(elapsed);
+  }
+  function showEnd(elapsed){
+    if(severInterval) clearInterval(severInterval);
+    $("screen-game").style.display="none";
+    $("screen-end").style.display="block";
+    var e = ENDINGS[state.ending];
+    $("end-title").textContent = e.title;
+    $("end-body").innerHTML = e.body;
+    var mm=String(Math.floor(elapsed/60)).padStart(2,"0"), ss=String(elapsed%60).padStart(2,"0");
+    $("end-stats").innerHTML =
+      '<div class="stat"><span class="num">'+mm+":"+ss+'</span><span class="lbl">Time</span></div>'+
+      '<div class="stat"><span class="num">'+state.hintsUsedTotal+'</span><span class="lbl">Memories Recalled</span></div>'+
+      '<div class="stat"><span class="num">'+state.resolve+'/5</span><span class="lbl">Resolve Left</span></div>';
+    clearProgress();
+  }
+
+  /* ================= RENDERER MAP ================= */
+  var RENDERERS = {
+    prologue: renderPrologue, ch1: renderCh1, ch1b: renderCh1b, ch2: renderCh2,
+    ch3a: renderCh3a, ch3b: renderCh3b, ch3c: renderCh3c, ch4: renderCh4,
+    ch5a: renderCh5a, ch5b: renderCh5b, ch6: renderCh6,
+    branch_restore: renderBranchRestore, branch_forge: renderBranchForge,
+    branch_sever: renderBranchSever, branch_balanced: renderBranchBalanced
+  };
+
+  /* ================= BOOT ================= */
+  function startGame(){
+    $("screen-title").style.display="none";
+    $("screen-game").style.display="block";
+    setupEmbers(); clockStart(); render();
+  }
+  function connectAsVowkeeper(name){
+    currentCallsign = name; 
+    try{ localStorage.setItem("arcade-operator", sanitize(currentCallsign)); }catch(e){}
+    initAudio();
+    state.screen="prologue"; state.align={restore:0,forge:0,sever:0}; state.flags={};
+    state.hintsLeft=4; state.hintsUsedTotal=0; state.resolve=5; state.fragments=[]; state.ending=null;
+    var data = loadProgress();
+    if(data && data.screen){
+      state.screen=data.screen; state.align=data.align||state.align; state.flags=data.flags||state.flags;
+      state.hintsLeft=typeof data.hintsLeft==="number"?data.hintsLeft:4;
+      state.hintsUsedTotal=data.hintsUsedTotal||0;
+      state.resolve=typeof data.resolve==="number"?data.resolve:5;
+      state.fragments=data.fragments||[];
+    }
+    var tag=$("operator-tag"); if(tag) tag.innerHTML="Vowkeeper: <b>"+displayName(currentCallsign)+"</b>";
+    startGame();
+  }
+
+  var pendingOperator = getOperator();
+  if(pendingOperator){ $("callsign-input").value = pendingOperator; }
+
+  $("btn-power").addEventListener("click", function(){
+    var name = $("callsign-input").value;
+    if(!name || !name.trim()){
+      $("callsign-error").textContent="Speak your name before you speak the oath.";
+      $("callsign-input").focus(); return;
+    }
+    $("callsign-error").textContent="";
+    connectAsVowkeeper(name);
+  });
+  $("callsign-input").addEventListener("keydown", function(e){ if(e.key==="Enter") $("btn-power").click(); });
+  $("callsign-input").addEventListener("input", function(){
+    clearTimeout(window._resumeDebounce);
+    window._resumeDebounce = setTimeout(updateResumeNote, 350);
+  });
+  $("btn-mute").addEventListener("click", toggleMute);
+  $("btn-reset").addEventListener("click", function(){
+    if(!confirm("Begin "+displayName(currentCallsign)+"'s oath again from the start?")) return;
+    clearProgress();
+    state.screen="prologue"; state.align={restore:0,forge:0,sever:0}; state.flags={};
+    state.hintsLeft=4; state.hintsUsedTotal=0; state.resolve=5; state.fragments=[];
+    render();
+  });
+  $("btn-switch").addEventListener("click", function(){
+    if(severInterval) clearInterval(severInterval);
+    $("screen-game").style.display="none"; $("screen-title").style.display="block";
+    $("callsign-input").value=""; $("resume-note").textContent=""; $("callsign-error").textContent="";
+    loadRoster(); $("callsign-input").focus();
+  });
+  $("btn-replay").addEventListener("click", function(){
+    clearProgress();
+    state.screen="prologue"; state.align={restore:0,forge:0,sever:0}; state.flags={};
+    state.hintsLeft=4; state.hintsUsedTotal=0; state.resolve=5; state.fragments=[]; state.ending=null;
+    $("screen-end").style.display="none"; $("screen-game").style.display="block";
+    setupEmbers(); clockStart(); render();
+  });
+
+  loadRoster();
+  if(pendingOperator) updateResumeNote();
+
+})();
+</script>
+</body>
+</html>

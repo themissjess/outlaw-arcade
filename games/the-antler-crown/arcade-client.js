@@ -1,12 +1,10 @@
-var API_ENDPOINT = "https://outlaw-arcade-scores.jessica-manuel.workers.dev";
+const API_ENDPOINT = "https://outlaw-arcade-scores.jessica-manuel.workers.dev";
 
 // Show visible notification for score submission (works without console access)
 function showScoreNotification(message, isSuccess) {
   try {
     var existing = document.getElementById('score-notification');
-    if (existing) {
-      existing.parentNode.removeChild(existing);
-    }
+    if (existing) existing.remove();
     
     var notification = document.createElement('div');
     notification.id = 'score-notification';
@@ -22,9 +20,7 @@ function showScoreNotification(message, isSuccess) {
         notif.style.transition = 'opacity 0.5s';
         setTimeout(function() {
           var notif2 = document.getElementById('score-notification');
-          if (notif2) {
-            notif2.parentNode.removeChild(notif2);
-          }
+          if (notif2) notif2.remove();
         }, 500);
       }
     }, 5000);
@@ -45,7 +41,7 @@ async function submitScore(payload) {
   console.log("Submitting score:", payload);
   
   try {
-    var response = await fetch(API_ENDPOINT, {
+    const response = await fetch(API_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -69,16 +65,39 @@ async function submitScore(payload) {
   }
 }
 
+// Show visible notification for score submission (works without console access)
+function showScoreNotification(message, isSuccess) {
+  try {
+    var existing = document.getElementById('score-notification');
+    if (existing) existing.remove();
+    
+    var notification = document.createElement('div');
+    notification.id = 'score-notification';
+    var bgColor = isSuccess ? '#4CAF50' : '#f44336';
+    notification.style.cssText = 'position:fixed;top:20px;right:20px;background:' + bgColor + ';color:white;padding:15px 20px;border-radius:8px;font-family:system-ui,sans-serif;font-size:14px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:300px;';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+      var notif = document.getElementById('score-notification');
+      if (notif) {
+        notif.style.opacity = '0';
+        notif.style.transition = 'opacity 0.5s';
+        setTimeout(function() {
+          var notif2 = document.getElementById('score-notification');
+          if (notif2) notif2.remove();
+        }, 500);
+      }
+    }, 5000);
+  } catch (e) {
+    console.warn("Could not show notification:", e);
+  }
+}
+
 async function fetchLeaderboard() {
   try {
-    var url = API_ENDPOINT;
-    if (url.indexOf("?") === -1) {
-      url = url + "?action=leaderboard";
-    } else {
-      url = url + "&action=leaderboard";
-    }
-    
-    var res = await fetch(url);
+    const url = API_ENDPOINT + (API_ENDPOINT.includes("?") ? "&" : "?") + "action=leaderboard";
+    const res = await fetch(url);
     if (!res.ok) {
       console.error("Leaderboard fetch failed with status:", res.status, res.statusText);
       throw new Error("bad response");
@@ -92,11 +111,11 @@ async function fetchLeaderboard() {
 
 function getOperator() {
   try {
-    var urlParams = new URLSearchParams(window.location.search);
-    var urlOperator = urlParams.get("operator");
+    const url = new URLSearchParams(location.search);
+    const urlOperator = url.get("operator");
     if (urlOperator) return urlOperator;
     
-    var stored = localStorage.getItem("arcade-operator");
+    const stored = localStorage.getItem("arcade-operator");
     return stored || "";
   } catch (e) {
     console.warn("getOperator failed (localStorage may be disabled):", e);
