@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Root &amp; Ruin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15110C;
+    --panel:#231C14;
+    --panel-2:#2C2318;
+    --paper:#EDE3C6;
+    --paper-dim:#B9AE8E;
+    --cure:#5C8A4A;
+    --cure-bright:#7FB868;
+    --cure-dim:#33512A;
+    --ruin:#8B5A9E;
+    --ruin-bright:#B07FC7;
+    --ruin-dim:#4A3157;
+    --copper:#BE7B3F;
+    --copper-bright:#DDA05C;
+    --line:#4A3E2B;
+    --danger:#B5482F;
+    --font-display:'Fraunces', serif;
+    --font-body:'Crimson Text', Georgia, serif;
+    --font-ledger:'Special Elite', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--ink);}
+  body{
+    font-family:var(--font-body);
+    color:var(--paper);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    font-size:18px;
+    line-height:1.55;
+  }
+  #app{
+    position:relative;
+    width:100%;
+    max-width:920px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    box-shadow:0 0 0 1px #000, 0 30px 80px rgba(0,0,0,0.7), inset 0 0 120px rgba(0,0,0,0.35);
+    overflow:hidden;
+  }
+  #hud{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 20px; background:var(--panel-2); border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  #hud .brand{ font-family:var(--font-display); font-weight:700; letter-spacing:0.06em; font-size:1rem; color:var(--copper-bright); }
+  #hud .brand span{ color:var(--paper-dim); font-weight:500; }
+  .hud-mid{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .actbadge{ font-family:var(--font-ledger); font-size:0.7rem; color:var(--paper-dim); border:1px solid var(--line); padding:3px 8px; border-radius:3px; }
+  .evidence-badge{ font-family:var(--font-ledger); font-size:0.7rem; color:var(--ruin-bright); border:1px solid var(--ruin-dim); padding:3px 8px; border-radius:3px; }
+  .meter-wrap{ display:flex; align-items:center; gap:8px; font-family:var(--font-ledger); font-size:0.72rem; color:var(--paper-dim); letter-spacing:0.04em;}
+  .meter-track{ width:120px; height:8px; background:#000; border-radius:4px; overflow:hidden; border:1px solid var(--line); }
+  .meter-fill{ height:100%; background:linear-gradient(90deg,var(--danger),var(--copper),var(--cure-bright)); transition:width 0.4s ease; }
+  #stage{ padding:32px 36px; min-height:420px; }
+  @media (max-width:640px){ #stage{ padding:22px 18px; } #hud{ padding:10px 14px; } }
+  h1.title{ font-family:var(--font-display); font-weight:700; font-size:2.6rem; color:var(--paper); margin:0 0 6px; letter-spacing:0.01em; }
+  h2.scene-title{ font-family:var(--font-display); font-weight:600; font-size:1.5rem; color:var(--copper-bright); margin:0 0 16px; }
+  p{ margin:0 0 14px; color:var(--paper); }
+  .dim{ color:var(--paper-dim); }
+  .ledger{ font-family:var(--font-ledger); background:#000; color:var(--cure-bright); padding:16px 18px; border-radius:4px; border:1px solid var(--line); letter-spacing:0.03em; font-size:0.95rem; white-space:pre-wrap; }
+  .callout{ border-left:3px solid var(--copper); padding:10px 16px; background:rgba(190,123,63,0.08); margin:16px 0; font-style:italic; color:var(--paper-dim); }
+  button{ font-family:var(--font-body); font-size:1rem; cursor:pointer; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--copper); color:#1B140D; border:none; border-radius:5px;
+    padding:11px 22px; font-weight:600; font-family:var(--font-display);
+    transition:background 0.2s, transform 0.1s;
+  }
+  .btn:hover{ background:var(--copper-bright); }
+  .btn:active{ transform:scale(0.97); }
+  .btn:focus-visible{ outline:3px solid var(--paper); outline-offset:2px; }
+  .btn.secondary{ background:transparent; border:1px solid var(--line); color:var(--paper); }
+  .btn.secondary:hover{ border-color:var(--copper); color:var(--copper-bright); background:transparent; }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:20px; align-items:center; }
+  .hint-btn{ margin-left:auto; background:transparent; border:1px dashed var(--ruin); color:var(--ruin-bright); border-radius:5px; padding:9px 16px; font-family:var(--font-ledger); font-size:0.78rem; }
+  .hint-btn:hover{ background:rgba(139,90,158,0.12); }
+  .hint-box{ margin-top:14px; padding:12px 16px; border:1px solid var(--ruin-dim); border-radius:5px; background:rgba(139,90,158,0.08); color:var(--ruin-bright); font-style:italic; font-size:0.92rem; }
+  .feedback{ margin-top:14px; padding:10px 14px; border-radius:5px; font-family:var(--font-ledger); font-size:0.85rem; }
+  .feedback.good{ background:rgba(92,138,74,0.15); color:var(--cure-bright); border:1px solid var(--cure-dim); }
+  .feedback.bad{ background:rgba(181,72,47,0.15); color:#E39A85; border:1px solid var(--danger); }
+  /* forage grid */
+  .forage-grid{ display:grid; gap:4px; margin:18px 0; }
+  .fcell{ aspect-ratio:1; background:var(--panel-2); border:1px solid var(--line); border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:var(--font-ledger); font-size:0.85rem; color:var(--paper-dim); cursor:pointer; user-select:none; transition:background 0.15s; min-width:0; }
+  .fcell:hover:not(.revealed){ background:#3a2f1f; }
+  .fcell:focus-visible{ outline:2px solid var(--copper-bright); outline-offset:-2px; }
+  .fcell.revealed{ background:#1a150e; cursor:default; color:var(--paper-dim); }
+  .fcell.revealed.zero{ color:transparent; }
+  .fcell.hazard{ background:var(--ruin-dim); color:var(--ruin-bright); }
+  .fcell.herb{ background:var(--cure-dim); color:var(--cure-bright); font-size:1.1rem; }
+  .forage-status{ display:flex; justify-content:space-between; font-family:var(--font-ledger); font-size:0.8rem; color:var(--paper-dim); margin-bottom:6px; }
+  /* matching */
+  .patient-card{ border:1px solid var(--line); border-radius:6px; padding:14px 16px; margin-bottom:12px; background:var(--panel-2); }
+  .patient-card h3{ font-family:var(--font-display); font-size:1.05rem; margin:0 0 6px; color:var(--paper); }
+  .herb-select{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chip{ padding:7px 14px; border-radius:20px; border:1px solid var(--line); background:transparent; color:var(--paper-dim); font-size:0.88rem; font-family:var(--font-body); cursor:pointer; text-align:left; }
+  .chip:hover{ border-color:var(--copper); color:var(--paper); }
+  .chip.selected{ background:var(--cure-dim); border-color:var(--cure); color:var(--cure-bright); }
+  .chip:focus-visible{ outline:2px solid var(--copper-bright); }
+  /* deduction */
+  .deduce-table{ width:100%; border-collapse:collapse; margin:16px 0; font-size:0.92rem; }
+  .deduce-table th, .deduce-table td{ border:1px solid var(--line); padding:8px 10px; text-align:left; }
+  .deduce-table th{ font-family:var(--font-ledger); font-size:0.75rem; color:var(--paper-dim); background:var(--panel-2); }
+  .deduce-table select{ width:100%; background:var(--panel-2); color:var(--paper); border:1px solid var(--line); border-radius:4px; padding:6px; font-family:var(--font-body); }
+  .clue-card{ font-family:var(--font-body); font-style:italic; padding:10px 14px; border-left:2px solid var(--ruin); margin-bottom:8px; color:var(--paper-dim); font-size:0.94rem; }
+  /* brewing */
+  .brew-steps{ display:flex; flex-direction:column; gap:8px; margin:16px 0; }
+  .brew-step{ display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--line); border-radius:5px; background:var(--panel-2); }
+  .brew-step .order-badge{ font-family:var(--font-ledger); background:var(--copper); color:#1B140D; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0; }
+  .brew-step-controls{ margin-left:auto; display:flex; gap:4px; }
+  .brew-step-controls button{ background:var(--panel); border:1px solid var(--line); color:var(--paper-dim); border-radius:4px; width:28px; height:28px; }
+  .brew-step-controls button:hover{ color:var(--copper-bright); border-color:var(--copper); }
+  .pulse-timer{ font-family:var(--font-ledger); font-size:1.3rem; color:var(--danger); text-align:center; margin-bottom:14px; letter-spacing:0.05em; }
+  /* balance scale */
+  .scale-wrap{ display:flex; align-items:flex-end; justify-content:center; gap:30px; margin:24px 0; }
+  .pan{ width:150px; min-height:110px; border:2px solid var(--copper); border-radius:8px; background:var(--panel-2); padding:10px; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; transition:transform 0.3s; }
+  .pan.down{ transform:translateY(14px); }
+  .pan.up{ transform:translateY(-10px); }
+  .vial{ width:34px; height:44px; border-radius:4px 4px 8px 8px; background:var(--ruin-dim); border:1px solid var(--ruin); display:flex; align-items:center; justify-content:center; font-family:var(--font-ledger); font-size:0.75rem; color:var(--paper); cursor:pointer; }
+  .vial.usedup{ opacity:0.25; cursor:not-allowed; }
+  .vial-pool{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:14px; }
+  .fulcrum{ width:6px; height:60px; background:var(--copper); margin:0 auto; }
+  /* case board (hub) */
+  .case-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0; }
+  @media (max-width:640px){ .case-grid{ grid-template-columns:1fr; } }
+  .case-card{ border:1px solid var(--line); border-radius:8px; padding:18px; background:var(--panel-2); cursor:pointer; text-align:left; transition:border-color 0.2s, transform 0.1s; }
+  .case-card:hover{ border-color:var(--copper); transform:translateY(-2px); }
+  .case-card:focus-visible{ outline:2px solid var(--copper-bright); }
+  .case-card h3{ font-family:var(--font-display); font-size:1.15rem; margin:0 0 6px; color:var(--paper); }
+  .case-card .status{ font-family:var(--font-ledger); font-size:0.72rem; color:var(--paper-dim); }
+  .case-card.done{ border-color:var(--cure); }
+  .case-card.done .status{ color:var(--cure-bright); }
+  .evidence-list{ margin:16px 0; padding:0; list-style:none; }
+  .evidence-list li{ padding:8px 12px; border-left:2px solid var(--cure); margin-bottom:6px; font-style:italic; color:var(--paper-dim); font-size:0.92rem; }
+  footer.gamefoot{ padding:14px 24px; border-top:1px solid var(--line); font-family:var(--font-ledger); font-size:0.72rem; color:var(--paper-dim); text-align:center; }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="brand">ROOT <span>&amp;</span> RUIN</div>
+    <div class="hud-mid">
+      <div class="actbadge" id="actBadge">Prologue</div>
+      <div class="evidence-badge" id="evBadge">Evidence: 0/4</div>
+    </div>
+    <div class="meter-wrap">
+      VITAL SIGNS
+      <div class="meter-track"><div class="meter-fill" id="vitalsFill" style="width:100%"></div></div>
+    </div>
+  </div>
+  <div id="stage"></div>
+  <footer class="gamefoot">Outlaw Arcade &middot; a self-contained wing of the shelf</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   SHARED ARCADE CLIENT (inline copy, matches /shared/arcade-client.js contract)
+   ========================================================= */
+const API_ENDPOINT = "https://outlaw-arcade-scores.jessica-manuel.workers.dev";
+const GAME_SLUG = "root-and-ruin";
+
+function getOperator(){
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get('operator');
+  if(fromUrl){ localStorage.setItem('operator', fromUrl); return fromUrl; }
+  return localStorage.getItem('operator') || '';
+}
+function setOperator(name){ localStorage.setItem('operator', name); }
+
+async function submitScore({ metric, value, outcome, meta }){
+  const payload = {
+    game: GAME_SLUG,
+    operator: getOperator() || 'anonymous',
+    metric, value, outcome,
+    meta: meta || {},
+    timestamp: new Date().toISOString()
+  };
+  try{
+    await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){ console.warn('Score submission failed (non-blocking):', e); }
+}
+
+/* =========================================================
+   AUDIO — synthesized only, Web Audio oscillators
+   ========================================================= */
+let actx = null;
+function ac(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+function tone(freq, dur, type, gainVal){
+  try{
+    const c = ac();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = 0;
+    osc.connect(gain); gain.connect(c.destination);
+    const now = c.currentTime;
+    gain.gain.linearRampToValueAtTime(gainVal||0.06, now+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+    osc.start(now); osc.stop(now+dur+0.05);
+  }catch(e){ /* audio unavailable, ignore */ }
+}
+const sfx = {
+  click: ()=>tone(320,0.09,'triangle',0.05),
+  good: ()=>{ tone(440,0.14,'sine',0.06); setTimeout(()=>tone(660,0.2,'sine',0.05),90); },
+  bad: ()=>{ tone(180,0.22,'sawtooth',0.05); },
+  hazard: ()=>{ tone(140,0.3,'square',0.045); },
+  hint: ()=>tone(520,0.12,'sine',0.04),
+  page: ()=>tone(260,0.07,'triangle',0.03),
+  reveal: ()=>{ tone(380,0.1,'sine',0.05); setTimeout(()=>tone(560,0.16,'sine',0.05),110); }
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  scene: 'title',
+  vitals: 100,
+  hintsUsed: 0,
+  startTime: Date.now(),
+  leads: { village:false, court:false, archive:false, warrens:false },
+  visitOrder: [],
+  inv: {}
+};
+
+function setVitals(delta){
+  state.vitals = Math.max(0, Math.min(100, state.vitals + delta));
+  document.getElementById('vitalsFill').style.width = state.vitals + '%';
+}
+function setAct(name){ document.getElementById('actBadge').textContent = name; }
+function updateEvidenceBadge(){
+  const done = Object.values(state.leads).filter(Boolean).length;
+  document.getElementById('evBadge').textContent = `Evidence: ${done}/4`;
+}
+function goTo(key){ state.scene = key; render(); window.scrollTo({top:0,behavior:'instant'}); }
+
+/* =========================================================
+   PUZZLE DATA (verified via throwaway node scripts before build —
+   see build notes: forage2.js, logic.js, logic2.js, logic3.js, verify.js)
+   ========================================================= */
+
+function caesarShift(str, shift){
+  return str.split('').map(c => /[A-Z]/.test(c) ? String.fromCharCode((c.charCodeAt(0)-65+shift)%26+65) : c).join('');
+}
+const CIPHER_PLAIN = "THE CURE NEEDS MOONWORT FROM THE HOLLOW OAK";
+const CIPHER_SHIFT = 5;
+const CIPHER_TEXT = caesarShift(CIPHER_PLAIN, CIPHER_SHIFT);
+
+const FORAGE1 = {
+  w:8, h:5,
+  hazards: [[3,0],[6,1]],
+  herbs: { feverfew:{x:1,y:2,label:'Feverfew',glyph:'✿'}, elderflower:{x:5,y:2,label:'Elderflower',glyph:'❀'}, yarrow:{x:7,y:3,label:'Yarrow',glyph:'✤'} },
+  start:[0,0],
+  hazardName:'Hollow Hemlock (a false Queen\u2019s Lace)'
+};
+
+const PATIENTS = [
+  { id:'tam', name:'Old Miller Tam', symptom:'A burning fever that comes in waves, teeth chattering between.', answer:'feverfew' },
+  { id:'birdie', name:'Young Birdie', symptom:'A deep gash across the palm that will not stop weeping blood.', answer:'yarrow' },
+  { id:'hollis', name:'Widow Hollis', symptom:'Worn thin — every passing cough and chill takes root in her now.', answer:'elderflower' }
+];
+
+const SUSPECTS = [
+  { id:'corwin', name:'Steward Corwin', dish:'the bread' },
+  { id:'della', name:'Chef Della', dish:'the soup' },
+  { id:'aldric', name:'Physician Aldric', dish:'the tonic goblet' },
+  { id:'mira', name:'Cupbearer Mira', dish:'the wine' }
+];
+const DEDUCE_CLUES = [
+  "The poison in the wine made the King's pupils swallow their color whole, and he swore he saw things that weren't there.",
+  "Whoever tainted the bread used a plant with tall purple bells for flowers — the same one, dosed with care, that can also coax a failing heart back to rhythm.",
+  "The soup's poison numbed the mouth first, then burned like a swallowed coal.",
+  "By what's left, the tonic goblet held the last of the four — the one that climbs cold from the feet, the way it once silenced a philosopher in an Athenian cell."
+];
+const DEDUCE_SOLUTION = { corwin:'foxglove', della:'monkshood', aldric:'hemlock', mira:'belladonna' };
+const POISON_LABELS = { foxglove:'Foxglove (Digitalis)', monkshood:'Monkshood (Wolfsbane)', hemlock:'Hemlock', belladonna:'Belladonna (Deadly Nightshade)' };
+
+const ANTIDOTE_POOL = [
+  { id:'charcoalroot', label:'Charcoal-root', desc:'Binds free poison in the gut before it spreads.', correct:true },
+  { id:'honeywater', label:'Honeywater', desc:'Stabilizes a mixture so its parts don\u2019t separate.', correct:true },
+  { id:'peppermint', label:'Peppermint leaf', desc:'Settles a roiling stomach and eases the throat.', correct:true },
+  { id:'nettletea', label:'Nettle tea', desc:'A mild diuretic — useful for water retention, not poison.', correct:false },
+  { id:'driedrose', label:'Dried rose petal', desc:'Mostly perfume. Lovely. Medically idle.', correct:false },
+  { id:'bittermint', label:'Bittermint', desc:'Looks like peppermint, tastes wrong, does less.', correct:false }
+];
+
+const COURT_BREW_STEPS = [
+  { id:'A', label:'Add charcoal-root first, to bind what poison remains' },
+  { id:'B', label:'Stir in honeywater to stabilize the mixture' },
+  { id:'C', label:'Add peppermint leaf to settle the draught' },
+  { id:'D', label:'Warm gently over low flame' }
+];
+const COURT_BREW_ORDER = ['A','B','C','D'];
+
+const BALANCE_HEAVY_INDEX = 5; // verified: 2-weighing strategy resolves this correctly for any index 0-7
+
+const WARRENS_JARS = [
+  { id:'nightroot', label:'A squat clay jar, sealed with black wax', riddle:'"Steep me in ice-cold water," it reads, "and never let me feel the fire — or I turn from medicine to malice."' },
+  { id:'chamomile', label:'A round glass jar, dried flowers visible', riddle:'"I love the sun on my petals, and a warm cup at bedtime."' },
+  { id:'rosepetal', label:'A tall thin bottle, faintly perfumed', riddle:'"I am for perfume, not for physic — sweet, and little else."' },
+  { id:'thyme', label:'A bundle wrapped in twine', riddle:'"Crush me into a hot broth and I\u2019ll clear a chest by morning."' },
+  { id:'mint', label:'A small tin, rattling faintly', riddle:'"A hot cup or a cold one — it hardly matters to me. I settle a stomach either way."' }
+];
+const WARRENS_ANSWER = 'nightroot'; // verified: only jar whose riddle names heat as actively dangerous
+
+const FINALE_EVIDENCE = [
+  { id:'ev_village', label:'A corrupted herb cutting, sealed with a broken-alembic wax stamp', real:true },
+  { id:'ev_court', label:'Mira\u2019s confession: paid by someone matching a description you now recognize', real:true },
+  { id:'ev_archive', label:'The decoded journal names \u201cV.A.\u201d as the forger of its missing pages', real:true },
+  { id:'ev_warrens', label:'The herbalist recognizes the broken-alembic seal at once: Vess Ambrose\u2019s mark', real:true },
+  { id:'ev_decoy', label:'Steward Corwin\u2019s gambling IOU \u2014 an unrelated personal debt', real:false }
+];
+const FINALE_SUSPECTS = ['Vess Ambrose','Cupbearer Mira','Steward Corwin','Physician Aldric'];
+const FINALE_CULPRIT = 'Vess Ambrose';
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const stage = document.getElementById('stage');
+function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+
+function storyScene(opts){
+  stage.innerHTML = '';
+  setAct(opts.act);
+  const wrap = document.createElement('div');
+  let h = '';
+  if(opts.title) h += `<h2 class="scene-title">${opts.title}</h2>`;
+  opts.body.forEach(p => { h += `<p>${p}</p>`; });
+  if(opts.callout) h += `<div class="callout">${opts.callout}</div>`;
+  wrap.innerHTML = h;
+  stage.appendChild(wrap);
+  const row = el(`<div class="row"><button class="btn" id="nextBtn">${opts.choiceLabel||'Continue'}</button></div>`);
+  stage.appendChild(row);
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ sfx.page(); opts.onNext(); });
+}
+
+/* =========================================================
+   TITLE / OPERATOR GATE
+   ========================================================= */
+function sceneTitle(){
+  setAct('Prologue');
+  stage.innerHTML = '';
+  const existing = getOperator();
+  const wrap = el(`<div>
+    <h1 class="title">Root &amp; Ruin</h1>
+    <p class="dim">An apprentice apothecary's case file, in which every plant is a question: does it mend, or does it end?</p>
+    <div class="callout">Four leads, one culprit. Investigate them in any order — nothing here gates on the others. Every puzzle has a real, findable answer, and a hint is always one tap away if you want it, though it costs a little of your standing.</div>
+    <p>Sign your name in the ledger before you begin.</p>
+    <input id="opInput" type="text" placeholder="Your callsign" value="${existing}" style="font-family:var(--font-body);font-size:1rem;padding:10px 14px;border-radius:5px;border:1px solid var(--line);background:var(--panel-2);color:var(--paper);width:220px;max-width:100%;" />
+  </div>`);
+  stage.appendChild(wrap);
+  const row = el(`<div class="row"><button class="btn" id="startBtn">Open the Case</button></div>`);
+  stage.appendChild(row);
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    const v = document.getElementById('opInput').value.trim();
+    if(v) setOperator(v);
+    sfx.good();
+    goTo('cold-open');
+  });
+}
+
+function sceneColdOpen(){
+  storyScene({
+    act:'Prologue', title:'Three Fires at Once',
+    body:[
+      "Hollowmere is sick with a blight nobody can name. Three weeks later, word reaches you that the King collapsed at his own feast, poisoned mid-toast. A day after that, your master's private cabinet in the Guild Archive turns up disturbed — and a black-market herbalist in the Warrens is suddenly buying up rare, dangerous stock.",
+      "Your master doesn't think these are three separate problems. Neither, now, do you.",
+      "You have a satchel, a case ledger, and no instructions on which thread to pull first. That part's yours to decide."
+    ],
+    onNext: ()=>goTo('hub')
+  });
+}
+
+/* =========================================================
+   HUB — CASE BOARD
+   ========================================================= */
+const LEAD_META = {
+  village: { title:'Hollowmere', blurb:'A blight with no natural cause. Forage the Hollow Wood, then tend the sick.' },
+  court: { title:'The King\u2019s Court', blurb:'Someone poisoned the King mid-toast. Four suspects, one truth, and a clock once you know it.' },
+  archive: { title:'The Guild Archive', blurb:'Your master\u2019s cabinet was disturbed. An old cipher, and a scale that doesn\u2019t lie.' },
+  warrens: { title:'The Warrens', blurb:'A black-market herbalist knows more than they\u2019re saying — if you can earn it.' }
+};
+function sceneHub(){
+  setAct('Case Board');
+  updateEvidenceBadge();
+  stage.innerHTML = '';
+  const allDone = Object.values(state.leads).every(Boolean);
+  const wrap = el(`<div>
+    <h2 class="scene-title">Your Case Ledger</h2>
+    <p class="dim">Pick a thread. Work them in whatever order you like — each stands on its own.</p>
+    <div class="case-grid" id="caseGrid"></div>
+    ${state.visitOrder.length ? `<div class="callout">You've pulled on this in this order so far: ${state.visitOrder.map(k=>LEAD_META[k].title).join(' \u2192 ')}.</div>` : ''}
+  </div>`);
+  stage.appendChild(wrap);
+  const grid = document.getElementById('caseGrid');
+  Object.entries(LEAD_META).forEach(([key,meta])=>{
+    const done = state.leads[key];
+    const card = document.createElement('button');
+    card.className = 'case-card' + (done?' done':'');
+    card.innerHTML = `<h3>${meta.title}</h3><p style="margin:0 0 8px;color:var(--paper-dim);font-size:0.92rem;">${meta.blurb}</p><div class="status">${done?'RESOLVED — evidence filed':'Unresolved'}</div>`;
+    card.addEventListener('click', ()=>{
+      sfx.click();
+      if(!state.visitOrder.includes(key)) state.visitOrder.push(key);
+      if(done){ goTo(key+'-recap'); } else { goTo(key+'-intro'); }
+    });
+    grid.appendChild(card);
+  });
+  const row = el(`<div class="row">
+    <button class="btn" id="presentCaseBtn" ${allDone?'':'disabled'}>Present Your Case</button>
+    ${allDone?'':'<span class="dim" style="font-size:0.85rem;">Resolve all four leads to unlock the finale.</span>'}
+  </div>`);
+  stage.appendChild(row);
+  if(allDone) document.getElementById('presentCaseBtn').addEventListener('click', ()=>{ sfx.page(); goTo('finale-intro'); });
+}
+
+function leadRecap(key){
+  const meta = LEAD_META[key];
+  stage.innerHTML = '';
+  setAct(meta.title);
+  const ev = FINALE_EVIDENCE.find(e=>e.id==='ev_'+key);
+  const wrap = el(`<div>
+    <h2 class="scene-title">${meta.title} — Resolved</h2>
+    <p>You've already worked this thread. What you took from it:</p>
+    <div class="callout">${ev ? ev.label : ''}</div>
+  </div>`);
+  stage.appendChild(wrap);
+  const row = el(`<div class="row"><button class="btn secondary" id="backHub">Back to the Case Board</button></div>`);
+  stage.appendChild(row);
+  document.getElementById('backHub').addEventListener('click', ()=>{ sfx.page(); goTo('hub'); });
+}
+
+function resolveLead(key){
+  state.leads[key] = true;
+  updateEvidenceBadge();
+}
+
+/* =========================================================
+   LEAD: HOLLOWMERE
+   ========================================================= */
+function sceneVillageIntro(){
+  storyScene({
+    act:'Hollowmere', title:'The Withering',
+    body:[
+      "You arrive in Hollowmere three days after the last healer left in a hurry, and one day after the first child stopped eating.",
+      "They call it the Withering — a fever that comes in waves, wounds that won't close, lungs that give out on the young and old first. The Hollow Wood presses right up against the village fence. Somewhere in it are the herbs you need."
+    ],
+    onNext: ()=>goTo('village-forage')
+  });
+}
+function sceneVillageForage(){ forageScene(FORAGE1, 'forage1', ()=>goTo('village-patients'))(); }
+function sceneVillagePatients(){ patientMatchScene(()=>goTo('village-outro'))(); }
+function sceneVillageOutro(){
+  storyScene({
+    act:'Hollowmere', title:'A Stamp in the Undergrowth',
+    body:[
+      "The fevers break. The bleeding stops. Widow Hollis, for the first time in weeks, sleeps through the night.",
+      "But as you're packing up your basket, you notice something half-buried near the corrupted patch of hemlock-lookalikes: a torn cutting of the blighted strain itself, sealed with a dab of wax — pressed with a broken-alembic sigil you don't recognize. This wasn't natural. Someone planted it."
+    ],
+    onNext: ()=>{ resolveLead('village'); sfx.reveal(); goTo('hub'); }
+  });
+}
+
+/* =========================================================
+   LEAD: THE KING'S COURT
+   ========================================================= */
+function sceneCourtIntro(){
+  storyScene({
+    act:'The King\u2019s Court', title:'The Feast',
+    body:[
+      "The hall is louder and brighter than anything in Hollowmere. The King lifts his goblet in a toast. He drinks. He smiles. Twelve seconds later, he isn't smiling anymore.",
+      "His pupils have swallowed the color of his eyes whole. Four people touched his food and drink tonight. The court physician has notes on all four — hurried, but not useless."
+    ],
+    onNext: ()=>goTo('court-deduce')
+  });
+}
+function sceneCourtDeduce(){ deduceScene(()=>goTo('court-antidote'))(); }
+function sceneCourtAntidote(){ antidoteScene(()=>goTo('court-brew'))(); }
+function sceneCourtBrew(){ brewScene(COURT_BREW_STEPS, COURT_BREW_ORDER, 'The Antidote', 'The King\u2019s pulse is the clock now. Order the steps correctly before the count runs out — and if it does, you simply steady your hands and go again.', 75, ()=>goTo('court-outro'))(); }
+function sceneCourtOutro(){
+  storyScene({
+    act:'The King\u2019s Court', title:'A Confession, Half-Given',
+    body:[
+      "Color returns to the King's face. Cupbearer Mira is already in chains, sobbing that she never meant for anyone to die — that a stranger paid her, in advance, to add \"a pinch of something\" to the wine. She never learned a name.",
+      "But when you ask her to describe the stranger, the description she gives lines up, detail for detail, with someone you're starting to suspect isn't a stranger to the Guild at all."
+    ],
+    onNext: ()=>{ resolveLead('court'); sfx.reveal(); goTo('hub'); }
+  });
+}
+
+/* =========================================================
+   LEAD: THE GUILD ARCHIVE
+   ========================================================= */
+function sceneArchiveIntro(){
+  storyScene({
+    act:'The Guild Archive', title:'A Disturbed Cabinet',
+    body:[
+      "Your master's private study smells like dust and old paper, and right now, like something wrong. A cabinet has been forced — not broken, forced, by someone who once knew exactly how the lock worked.",
+      "On the desk: an old journal, its last page written in a hand you don't recognize, and a stamp identical to the broken-alembic seal from Hollowmere."
+    ],
+    onNext: ()=>goTo('archive-cipher')
+  });
+}
+function sceneArchiveCipher(){ cipherScene(()=>goTo('archive-balance'))(); }
+function sceneArchiveBalance(){ balanceScene(()=>goTo('archive-outro'))(); }
+function sceneArchiveOutro(){
+  storyScene({
+    act:'The Guild Archive', title:'V.A.',
+    body:[
+      "The decoded page isn't just a recipe — it's a confession, half-finished, initialed at the bottom in a cramped hand: <strong>V.A.</strong> Someone forged pages into this journal years after it was written, and swapped a vial in the trial cabinet to match.",
+      "Only three people in the Guild's history ever held a key to that cabinet. Two of them are accounted for. The third was expelled years ago, for research the Guild called reckless and she called necessary."
+    ],
+    onNext: ()=>{ resolveLead('archive'); sfx.reveal(); goTo('hub'); }
+  });
+}
+
+/* =========================================================
+   LEAD: THE WARRENS
+   ========================================================= */
+function sceneWarrensIntro(){
+  storyScene({
+    act:'The Warrens', title:'A Herbalist Who Knows Too Much',
+    body:[
+      "The Warrens smell like every plant you've ever learned to be careful with, all at once. The herbalist behind the counter doesn't trust apprentices on sight — you'll need to prove you know your trade before she tells you anything.",
+      "She sets five sealed jars on the counter. \"Point me to the Nightroot,\" she says, \"and we'll talk.\""
+    ],
+    onNext: ()=>goTo('warrens-riddle')
+  });
+}
+function sceneWarrensRiddle(){ warrensRiddleScene(()=>goTo('warrens-outro'))(); }
+function sceneWarrensOutro(){
+  storyScene({
+    act:'The Warrens', title:'A Name from the Past',
+    body:[
+      "The herbalist relaxes, half a degree. \"Someone's been buying Nightroot by the pound lately,\" she says, sliding a scrap of wax across the counter — the same broken-alembic seal, sloppily re-melted. \"Paid with this. Haven't seen that mark in years. Used to belong to a Guild alchemist — sharp as anything, until they threw her out. Vess Ambrose, her name was.\"",
+      "It's the first time anyone's said the name out loud."
+    ],
+    onNext: ()=>{ resolveLead('warrens'); sfx.reveal(); goTo('hub'); }
+  });
+}
+
+/* =========================================================
+   FINALE — PRESENT YOUR CASE
+   ========================================================= */
+function sceneFinaleIntro(){
+  storyScene({
+    act:'Finale', title:'Present Your Case',
+    body:[
+      "Four threads, one mark repeated across all of them. Your master listens without interrupting as you lay out everything you've gathered.",
+      "\"Then say it properly,\" she says, when you're done. \"Who, and prove it.\""
+    ],
+    onNext: ()=>goTo('finale-accuse')
+  });
+}
+function sceneFinaleAccuse(){
+  stage.innerHTML = '';
+  setAct('Finale');
+  const wrap = el(`<div>
+    <h2 class="scene-title">Name Them</h2>
+    <p>Choose the culprit:</p>
+    <div class="herb-select" id="suspectRow">
+      ${FINALE_SUSPECTS.map(s=>`<button class="chip" data-s="${s}">${s}</button>`).join('')}
+    </div>
+    <p style="margin-top:20px;">Choose the evidence that actually proves it (select all that apply):</p>
+    <div class="herb-select" id="evidenceRow">
+      ${FINALE_EVIDENCE.map(e=>`<button class="chip" data-e="${e.id}" style="max-width:420px;">${e.label}</button>`).join('')}
+    </div>
+    <div id="finaleFeedback"></div>
+  </div>`);
+  stage.appendChild(wrap);
+  let suspect = null;
+  const evPicked = new Set();
+  wrap.querySelectorAll('#suspectRow .chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      wrap.querySelectorAll('#suspectRow .chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      suspect = chip.dataset.s;
+      sfx.click();
+    });
+  });
+  wrap.querySelectorAll('#evidenceRow .chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const id = chip.dataset.e;
+      if(evPicked.has(id)){ evPicked.delete(id); chip.classList.remove('selected'); }
+      else { evPicked.add(id); chip.classList.add('selected'); }
+      sfx.click();
+    });
+  });
+  const row = el(`<div class="row"><button class="btn" id="finaleSubmit">Make the accusation</button></div>`);
+  stage.appendChild(row);
+  document.getElementById('finaleSubmit').addEventListener('click', ()=>{
+    const fb = document.getElementById('finaleFeedback');
+    const correctEv = new Set(FINALE_EVIDENCE.filter(e=>e.real).map(e=>e.id));
+    const evCorrect = evPicked.size===correctEv.size && [...evPicked].every(id=>correctEv.has(id));
+    if(suspect === FINALE_CULPRIT && evCorrect){
+      sfx.good();
+      fb.innerHTML = `<div class="feedback good">It holds. Every mark, every witness, every seal — all Vess Ambrose.</div>`;
+      setTimeout(()=>goTo('ending'), 1000);
+    } else {
+      sfx.bad(); setVitals(-10);
+      let msg = 'Not quite. ';
+      if(suspect !== FINALE_CULPRIT) msg += 'The suspect doesn\u2019t fit every thread. ';
+      if(!evCorrect) msg += 'And the evidence you\u2019ve chosen doesn\u2019t all point the same way — one item here is unrelated to any of this.';
+      fb.innerHTML = `<div class="feedback bad">${msg} (-10 vital signs)</div>`;
+    }
+  });
+  const hintRow = el(`<div class="row"><button class="hint-btn" id="finaleHint">Consult the herbarium (-6 vital signs)</button></div>`);
+  stage.appendChild(hintRow);
+  document.getElementById('finaleHint').addEventListener('click', ()=>{
+    sfx.hint(); state.hintsUsed++; setVitals(-6);
+    stage.appendChild(el(`<div class="hint-box">Every real clue names the same wax seal or the same initials — V.A. One item on the list is just a personal debt with nothing to do with poison, plants, or seals.</div>`));
+  });
+}
+
+function sceneEnding(){
+  setAct('Epilogue');
+  stage.innerHTML = '';
+  const elapsed = Math.round((Date.now()-state.startTime)/1000);
+  const mins = Math.floor(elapsed/60), secs = elapsed%60;
+  const wrap = el(`<div>
+    <h1 class="title">Case Closed.</h1>
+    <p>Vess Ambrose is found three days later, in a cottage two provinces over, surrounded by notes that make your master go very quiet as she reads them. Nobody tells you exactly what happens to her. You don't ask twice.</p>
+    <p>Hollowmere is well. The King eats his meals without a taster now, mostly out of habit rather than fear. And your master, for the first time since you've known her, looks at you like someone she'd trust with a case of her own.</p>
+    <div class="callout">You worked this in this order: ${state.visitOrder.map(k=>LEAD_META[k].title).join(' \u2192 ')}. Someone else might have found it a completely different way.</div>
+    <p class="dim">Time: ${mins}m ${secs}s &middot; Vital signs remaining: ${state.vitals} &middot; Hints consulted: ${state.hintsUsed}</p>
+    <div id="scoreStatus" class="dim" style="font-family:var(--font-ledger);font-size:0.8rem;"></div>
+  </div>`);
+  stage.appendChild(wrap);
+  sfx.good();
+  submitScore({
+    metric: 'seconds',
+    value: elapsed,
+    outcome: 'completed',
+    meta: { vitalsLeft: state.vitals, hintsUsed: state.hintsUsed, order: state.visitOrder }
+  }).then(()=>{
+    const s = document.getElementById('scoreStatus');
+    if(s) s.textContent = 'Score submitted to the arcade ledger.';
+  });
+  const row = el(`<div class="row"><button class="btn secondary" id="replayBtn">Reopen the case</button></div>`);
+  stage.appendChild(row);
+  document.getElementById('replayBtn').addEventListener('click', ()=>{
+    state.scene='title'; state.vitals=100; state.hintsUsed=0; state.startTime=Date.now();
+    state.leads={village:false,court:false,archive:false,warrens:false}; state.visitOrder=[]; state.inv={};
+    setVitals(0);
+    render();
+  });
+}
+
+/* =========================================================
+   PUZZLE RENDERERS (shared building blocks)
+   ========================================================= */
+function forageScene(cfg, collectedKey, onDone){
+  return function(){
+    stage.innerHTML = '';
+    const needed = Object.keys(cfg.herbs);
+    const collected = new Set(state.inv[collectedKey] || []);
+    state.inv[collectedKey] = state.inv[collectedKey] || [];
+
+    const wrap = el(`<div>
+      <h2 class="scene-title">The Foraging Ground</h2>
+      <p>Search the grid for what you need, avoiding the hazard: ${cfg.hazardName}. Revealed numbers count hazardous neighbors — a blank tile means every neighbor is safe.</p>
+      <div class="forage-status">
+        <span>Found: <span id="foundCount">${collected.size}</span> / ${needed.length}</span>
+      </div>
+      <div class="forage-grid" id="fgrid" style="grid-template-columns:repeat(${cfg.w},1fr);max-width:${cfg.w*54}px;"></div>
+      <div id="forageFeedback"></div>
+    </div>`);
+    stage.appendChild(wrap);
+
+    const hazSet = new Set(cfg.hazards.map(([x,y])=>x+','+y));
+    const herbAt = {};
+    Object.entries(cfg.herbs).forEach(([k,v])=>herbAt[v.x+','+v.y]=k);
+
+    function neighborCount(x,y){
+      let n=0;
+      for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+        if(dx===0&&dy===0) continue;
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>=cfg.w||ny>=cfg.h) continue;
+        if(hazSet.has(nx+','+ny)) n++;
+      }
+      return n;
+    }
+    const revealed = new Set();
+    function floodFrom(x,y){
+      const q=[[x,y]];
+      revealed.add(x+','+y);
+      while(q.length){
+        const [cx,cy]=q.shift();
+        if(hazSet.has(cx+','+cy)) continue;
+        const num = neighborCount(cx,cy);
+        if(num===0){
+          for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+            if(dx===0&&dy===0) continue;
+            const nx=cx+dx, ny=cy+dy;
+            if(nx<0||ny<0||nx>=cfg.w||ny>=cfg.h) continue;
+            const key=nx+','+ny;
+            if(!revealed.has(key)){ revealed.add(key); q.push([nx,ny]); }
+          }
+        }
+      }
+    }
+    floodFrom(cfg.start[0], cfg.start[1]);
+
+    const grid = document.getElementById('fgrid');
+    function draw(){
+      grid.innerHTML = '';
+      for(let y=0;y<cfg.h;y++){
+        for(let x=0;x<cfg.w;x++){
+          const key = x+','+y;
+          const cell = document.createElement('button');
+          cell.className = 'fcell';
+          cell.setAttribute('aria-label', 'forage cell '+x+','+y);
+          if(revealed.has(key)){
+            cell.classList.add('revealed');
+            if(hazSet.has(key)){
+              cell.classList.add('hazard'); cell.textContent = '☠';
+            } else if(herbAt[key] && collected.has(herbAt[key])){
+              cell.classList.add('herb'); cell.textContent = cfg.herbs[herbAt[key]].glyph;
+            } else {
+              const num = neighborCount(x,y);
+              if(num===0) cell.classList.add('zero');
+              cell.textContent = num===0 ? '' : num;
+              if(herbAt[key]) cell.style.boxShadow = 'inset 0 0 0 1px var(--cure)';
+            }
+          } else {
+            cell.textContent = '';
+          }
+          cell.addEventListener('click', ()=>onClickCell(x,y));
+          grid.appendChild(cell);
+        }
+      }
+    }
+    function onClickCell(x,y){
+      const key = x+','+y;
+      if(revealed.has(key) && !herbAt[key]) return;
+      if(hazSet.has(key)){
+        sfx.hazard();
+        setVitals(-8);
+        revealed.add(key);
+        document.getElementById('forageFeedback').innerHTML = `<div class="feedback bad">A bristle of false hemlock — your hand stings, but you pull back in time. (-8 vital signs)</div>`;
+        draw();
+        return;
+      }
+      if(!revealed.has(key)) floodFrom(x,y);
+      if(herbAt[key] && !collected.has(herbAt[key])){
+        collected.add(herbAt[key]);
+        state.inv[collectedKey].push(herbAt[key]);
+        sfx.good();
+        document.getElementById('forageFeedback').innerHTML = `<div class="feedback good">Gathered ${cfg.herbs[herbAt[key]].label}.</div>`;
+        document.getElementById('foundCount').textContent = collected.size;
+      }
+      draw();
+      if(collected.size === needed.length){
+        setTimeout(()=>{
+          const row = el(`<div class="row"><button class="btn" id="doneForage">Continue</button></div>`);
+          stage.appendChild(row);
+          document.getElementById('doneForage').addEventListener('click', ()=>{ sfx.page(); onDone(); });
+        }, 250);
+      }
+    }
+    draw();
+
+    const hintRow = el(`<div class="row"><button class="hint-btn" id="forageHint">Consult the herbarium (-6 vital signs)</button></div>`);
+    stage.appendChild(hintRow);
+    document.getElementById('forageHint').addEventListener('click', ()=>{
+      sfx.hint(); state.hintsUsed++; setVitals(-6);
+      const missing = needed.find(k=>!collected.has(k));
+      let msg = missing ? `The herbarium sketch shows ${cfg.herbs[missing].label} — its leaf-shape matches nothing dangerous nearby. A "0" on a revealed square means every neighbor is safe to open.` : 'You have already gathered everything you need.';
+      stage.appendChild(el(`<div class="hint-box">${msg}</div>`));
+    });
+  };
+}
+
+function patientMatchScene(onDone){
+  return function(){
+    stage.innerHTML = '';
+    const wrap = el(`<div>
+      <h2 class="scene-title">The Sickroom</h2>
+      <p>Three of Hollowmere sicken under the same slow blight. Your basket holds Feverfew, Elderflower, and Yarrow — one true cure per patient.</p>
+    </div>`);
+    stage.appendChild(wrap);
+    const answers = {};
+    PATIENTS.forEach(p=>{
+      const card = el(`<div class="patient-card">
+        <h3>${p.name}</h3>
+        <p class="dim">${p.symptom}</p>
+        <div class="herb-select" data-pid="${p.id}">
+          ${['feverfew','elderflower','yarrow'].map(h=>`<button class="chip" data-herb="${h}">${h.charAt(0).toUpperCase()+h.slice(1)}</button>`).join('')}
+        </div>
+      </div>`);
+      stage.appendChild(card);
+      card.querySelectorAll('.chip').forEach(chip=>{
+        chip.addEventListener('click', ()=>{
+          card.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+          chip.classList.add('selected');
+          answers[p.id] = chip.dataset.herb;
+          sfx.click();
+          checkDone();
+        });
+      });
+    });
+    const feedbackDiv = el(`<div id="patientFeedback"></div>`);
+    stage.appendChild(feedbackDiv);
+    const row = el(`<div class="row"><button class="btn" id="submitPatients">Administer the cures</button></div>`);
+    stage.appendChild(row);
+    function checkDone(){
+      document.getElementById('submitPatients').disabled = Object.keys(answers).length < PATIENTS.length;
+    }
+    checkDone();
+    document.getElementById('submitPatients').addEventListener('click', ()=>{
+      const allCorrect = PATIENTS.every(p=>answers[p.id]===p.answer);
+      if(allCorrect){
+        sfx.good();
+        feedbackDiv.innerHTML = `<div class="feedback good">Fever breaks, blood stops, breath steadies. Hollowmere will see another spring.</div>`;
+        setTimeout(onDone, 900);
+      } else {
+        sfx.bad(); setVitals(-10);
+        feedbackDiv.innerHTML = `<div class="feedback bad">One cure was wrong for its patient. They'll recover, shaken — but you've learned something. Try again. (-10 vital signs)</div>`;
+      }
+    });
+  };
+}
+
+function cipherScene(onDone){
+  return function(){
+    stage.innerHTML = '';
+    const wrap = el(`<div>
+      <h2 class="scene-title">The Old Apothecary's Journal</h2>
+      <p>Pressed into the journal's last page is a five-petaled bloom — and beneath it, a line written in a hand you don't recognize.</p>
+      <div class="ledger">${CIPHER_TEXT}</div>
+      <div class="callout">Five petals. Perhaps that's the key — shift each letter back by five, as if turning it against the alphabet's grain.</div>
+      <p>Decode the message:</p>
+      <input id="cipherInput" type="text" style="width:100%;font-family:var(--font-ledger);padding:10px 14px;border-radius:5px;border:1px solid var(--line);background:var(--panel-2);color:var(--paper);text-transform:uppercase;letter-spacing:0.04em;" placeholder="TYPE YOUR ANSWER HERE" />
+      <div id="cipherFeedback"></div>
+    </div>`);
+    stage.appendChild(wrap);
+    const row = el(`<div class="row"><button class="btn" id="cipherSubmit">Decode</button></div>`);
+    stage.appendChild(row);
+    document.getElementById('cipherSubmit').addEventListener('click', ()=>{
+      const val = document.getElementById('cipherInput').value.trim().toUpperCase().replace(/\s+/g,' ');
+      const fb = document.getElementById('cipherFeedback');
+      if(val === CIPHER_PLAIN){
+        sfx.good();
+        fb.innerHTML = `<div class="feedback good">The old hand's message resolves. Moonwort — a name that will matter again before this is over.</div>`;
+        setTimeout(onDone, 900);
+      } else {
+        sfx.bad(); setVitals(-4);
+        fb.innerHTML = `<div class="feedback bad">Not quite. Remember: shift each letter back five places. (-4 vital signs)</div>`;
+      }
+    });
+    const hintRow = el(`<div class="row"><button class="hint-btn" id="cipherHint">Consult the herbarium (-6 vital signs)</button></div>`);
+    stage.appendChild(hintRow);
+    document.getElementById('cipherHint').addEventListener('click', ()=>{
+      sfx.hint(); state.hintsUsed++; setVitals(-6);
+      stage.appendChild(el(`<div class="hint-box">First word: Y→T, M→H, J→E. That's "THE". Carry the same shift the rest of the way.</div>`));
+    });
+  };
+}
+
+function deduceScene(onDone){
+  return function(){
+    stage.innerHTML = '';
+    const wrap = el(`<div>
+      <h2 class="scene-title">Four Dishes, One Table</h2>
+      <p>Four people touched the King's food and drink tonight. Read the physician's notes, then name each poison to its source.</p>
+      ${DEDUCE_CLUES.map(c=>`<div class="clue-card">${c}</div>`).join('')}
+      <table class="deduce-table">
+        <thead><tr><th>Suspect</th><th>Served</th><th>Your accusation</th></tr></thead>
+        <tbody>
+          ${SUSPECTS.map(s=>`<tr>
+            <td>${s.name}</td><td>${s.dish}</td>
+            <td><select data-sid="${s.id}">
+              <option value="">— choose —</option>
+              ${Object.entries(POISON_LABELS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+            </select></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div id="deduceFeedback"></div>
+    </div>`);
+    stage.appendChild(wrap);
+    const row = el(`<div class="row"><button class="btn" id="deduceSubmit">Name the poisoner</button></div>`);
+    stage.appendChild(row);
+    document.getElementById('deduceSubmit').addEventListener('click', ()=>{
+      const answers = {};
+      wrap.querySelectorAll('select').forEach(s=>answers[s.dataset.sid]=s.value);
+      const fb = document.getElementById('deduceFeedback');
+      const correct = SUSPECTS.every(s=>answers[s.id]===DEDUCE_SOLUTION[s.id]);
+      if(correct){
+        sfx.good();
+        fb.innerHTML = `<div class="feedback good">It holds together. Cupbearer Mira poured the King's wine — and Belladonna dilated his eyes to black. You know your enemy now.</div>`;
+        setTimeout(onDone, 1000);
+      } else {
+        sfx.bad(); setVitals(-10);
+        fb.innerHTML = `<div class="feedback bad">Something doesn't fit the notes. Read the clues again — each one names a dish directly or by elimination. (-10 vital signs)</div>`;
+      }
+    });
+    const hintRow = el(`<div class="row"><button class="hint-btn" id="deduceHint">Consult the herbarium (-6 vital signs)</button></div>`);
+    stage.appendChild(hintRow);
+    document.getElementById('deduceHint').addEventListener('click', ()=>{
+      sfx.hint(); state.hintsUsed++; setVitals(-6);
+      stage.appendChild(el(`<div class="hint-box">Clue one names the wine directly: Belladonna. Clue two names the bread directly: Foxglove. Clue three names the soup directly: Monkshood. Whatever's left belongs to the tonic goblet.</div>`));
+    });
+  };
+}
+
+function antidoteScene(onDone){
+  return function(){
+    stage.innerHTML = '';
+    const wrap = el(`<div>
+      <h2 class="scene-title">The Physic Cabinet</h2>
+      <p>Belladonna: dilated eyes, a racing heart, a dry mouth, and visions that aren't there. You need exactly three ingredients — one to bind the poison, one to hold the mixture together, one to settle his stomach.</p>
+      <div class="herb-select" id="antidotePool">
+        ${ANTIDOTE_POOL.map(i=>`<button class="chip" data-id="${i.id}" title="${i.desc}">${i.label}</button>`).join('')}
+      </div>
+      <p class="dim" style="margin-top:10px;font-size:0.9rem;">Hover or tap-and-hold a name to recall what it does.</p>
+      <div id="antidoteFeedback"></div>
+    </div>`);
+    stage.appendChild(wrap);
+    const picked = new Set();
+    wrap.querySelectorAll('#antidotePool .chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        const id = chip.dataset.id;
+        if(picked.has(id)){ picked.delete(id); chip.classList.remove('selected'); }
+        else if(picked.size < 3){ picked.add(id); chip.classList.add('selected'); sfx.click(); }
+      });
+    });
+    const row = el(`<div class="row"><button class="btn" id="antidoteSubmit">Prepare the antidote</button></div>`);
+    stage.appendChild(row);
+    document.getElementById('antidoteSubmit').addEventListener('click', ()=>{
+      const fb = document.getElementById('antidoteFeedback');
+      if(picked.size !== 3){ fb.innerHTML = `<div class="feedback bad">Choose exactly three.</div>`; return; }
+      const correctIds = new Set(ANTIDOTE_POOL.filter(i=>i.correct).map(i=>i.id));
+      const isCorrect = picked.size===correctIds.size && [...picked].every(id=>correctIds.has(id));
+      if(isCorrect){
+        sfx.good();
+        fb.innerHTML = `<div class="feedback good">Charcoal-root, honeywater, peppermint. The mixture goes cloudy, then clear. It's right.</div>`;
+        setTimeout(onDone, 900);
+      } else {
+        sfx.bad(); setVitals(-8);
+        fb.innerHTML = `<div class="feedback bad">The mixture won't settle — something in there doesn't belong. Think about what Belladonna actually does to the body. (-8 vital signs)</div>`;
+      }
+    });
+  };
+}
+
+function brewScene(steps, correctOrder, title, intro, timerSeconds, onDone){
+  return function(){
+    stage.innerHTML = '';
+    let order = [...steps.map(s=>s.id)].reverse();
+
+    const wrap = el(`<div>
+      <h2 class="scene-title">${title}</h2>
+      <p>${intro}</p>
+      ${timerSeconds ? `<div class="pulse-timer" id="pulseTimer">${timerSeconds}s</div>` : ''}
+      <p class="dim">Use the arrows to put every step in the right order, then brew.</p>
+      <div class="brew-steps" id="brewSteps"></div>
+      <div id="brewFeedback"></div>
+    </div>`);
+    stage.appendChild(wrap);
+    const list = document.getElementById('brewSteps');
+
+    function draw(){
+      list.innerHTML = '';
+      order.forEach((id,idx)=>{
+        const step = steps.find(s=>s.id===id);
+        const row = el(`<div class="brew-step">
+          <div class="order-badge">${idx+1}</div>
+          <div>${step.label}</div>
+          <div class="brew-step-controls">
+            <button aria-label="move up" data-dir="-1" data-id="${id}" ${idx===0?'disabled':''}>&uarr;</button>
+            <button aria-label="move down" data-dir="1" data-id="${id}" ${idx===order.length-1?'disabled':''}>&darr;</button>
+          </div>
+        </div>`);
+        list.appendChild(row);
+      });
+      list.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          sfx.click();
+          const id = btn.dataset.id, dir = parseInt(btn.dataset.dir,10);
+          const i = order.indexOf(id);
+          const j = i+dir;
+          if(j<0||j>=order.length) return;
+          [order[i],order[j]]=[order[j],order[i]];
+          draw();
+        });
+      });
+    }
+    draw();
+
+    let timeLeft = timerSeconds;
+    let timerId = null;
+    function tick(){
+      timeLeft--;
+      const t = document.getElementById('pulseTimer');
+      if(t) t.textContent = timeLeft+'s';
+      if(timeLeft<=10 && t) t.style.color = '#E39A85';
+      if(timeLeft<=0){
+        clearInterval(timerId);
+        setVitals(-12);
+        sfx.bad();
+        const fb = document.getElementById('brewFeedback');
+        if(fb) fb.innerHTML = `<div class="feedback bad">The King's pulse falters as the moment slips. You steady yourself and begin again. (-12 vital signs)</div>`;
+        timeLeft = timerSeconds;
+        if(document.getElementById('pulseTimer')) document.getElementById('pulseTimer').textContent = timeLeft+'s';
+        timerId = setInterval(tick, 1000);
+      }
+    }
+    if(timerSeconds){ timerId = setInterval(tick, 1000); }
+
+    const row = el(`<div class="row"><button class="btn" id="brewSubmit">Brew it</button></div>`);
+    stage.appendChild(row);
+    document.getElementById('brewSubmit').addEventListener('click', ()=>{
+      const fb = document.getElementById('brewFeedback');
+      const correct = order.every((id,i)=>id===correctOrder[i]);
+      if(correct){
+        sfx.good();
+        if(timerId) clearInterval(timerId);
+        fb.innerHTML = `<div class="feedback good">The mixture settles into a clean, steady color. It's ready.</div>`;
+        setTimeout(onDone, 900);
+      } else {
+        sfx.bad(); setVitals(-6);
+        fb.innerHTML = `<div class="feedback bad">Wrong order — something in the mixture curdles. Think about what has to happen first, and what ruins everything if it happens too soon. (-6 vital signs)</div>`;
+      }
+    });
+    const hintRow = el(`<div class="row"><button class="hint-btn" id="brewHint">Consult the herbarium (-6 vital signs)</button></div>`);
+    stage.appendChild(hintRow);
+    document.getElementById('brewHint').addEventListener('click', ()=>{
+      sfx.hint(); state.hintsUsed++; setVitals(-6);
+      const first = steps.find(s=>s.id===correctOrder[0]);
+      const last = steps.find(s=>s.id===correctOrder[correctOrder.length-1]);
+      stage.appendChild(el(`<div class="hint-box">Whatever binds or activates the mixture should happen first: "${first.label}". Whatever is fragile, or undone by heat, should happen last: "${last.label}". Work out the middle from there.</div>`));
+    });
+  };
+}
+
+function balanceScene(onDone){
+  return function(){
+    stage.innerHTML = '';
+    const vials = Array.from({length:8}, (_,i)=>i);
+    let leftPan = [], rightPan = [];
+    let weighCount = 0;
+    const maxWeighings = 2;
+    let finalGuess = null;
+
+    const wrap = el(`<div>
+      <h2 class="scene-title">The Swapped Vial</h2>
+      <p>Eight vials, all labeled "Cure." One is a fraud — a slow poison, made just heavy enough that only a scale will tell. You have two weighings.</p>
+      <p class="dim">Weighings used: <span id="weighCount">0</span> / ${maxWeighings}</p>
+      <div class="vial-pool" id="vialPool"></div>
+      <div class="scale-wrap">
+        <div><div class="pan" id="leftPan"></div></div>
+        <div class="fulcrum"></div>
+        <div><div class="pan" id="rightPan"></div></div>
+      </div>
+      <div id="scaleResult" class="dim" style="text-align:center;margin-bottom:10px;"></div>
+    </div>`);
+    stage.appendChild(wrap);
+
+    const pool = document.getElementById('vialPool');
+    let mode = 'left';
+    function drawPool(){
+      pool.innerHTML = '';
+      vials.forEach(i=>{
+        const inPan = leftPan.includes(i) || rightPan.includes(i);
+        const v = document.createElement('button');
+        v.className = 'vial' + (inPan?' usedup':'');
+        v.textContent = '#'+(i+1);
+        v.disabled = inPan;
+        v.addEventListener('click', ()=>{
+          if(mode==='left') leftPan.push(i); else rightPan.push(i);
+          sfx.click();
+          drawPool(); drawPans();
+        });
+        pool.appendChild(v);
+      });
+    }
+    function drawPans(){
+      const lp = document.getElementById('leftPan'), rp = document.getElementById('rightPan');
+      lp.innerHTML = leftPan.map(i=>`<div class="vial">#${i+1}</div>`).join('');
+      rp.innerHTML = rightPan.map(i=>`<div class="vial">#${i+1}</div>`).join('');
+    }
+    drawPool(); drawPans();
+
+    const modeRow = el(`<div class="row" style="margin-top:0;">
+      <button class="btn secondary" id="modeLeft">Placing on: LEFT pan</button>
+      <button class="btn secondary" id="modeRight">Place on RIGHT pan instead</button>
+      <button class="btn secondary" id="clearPans">Clear pans</button>
+    </div>`);
+    stage.insertBefore(modeRow, document.getElementById('scaleResult'));
+    document.getElementById('modeLeft').addEventListener('click', ()=>{ mode='left'; document.getElementById('modeLeft').textContent='Placing on: LEFT pan'; document.getElementById('modeRight').textContent='Place on RIGHT pan instead'; });
+    document.getElementById('modeRight').addEventListener('click', ()=>{ mode='right'; document.getElementById('modeRight').textContent='Placing on: RIGHT pan'; document.getElementById('modeLeft').textContent='Place on LEFT pan instead'; });
+    document.getElementById('clearPans').addEventListener('click', ()=>{ leftPan=[]; rightPan=[]; drawPool(); drawPans(); document.getElementById('leftPan').className='pan'; document.getElementById('rightPan').className='pan'; });
+
+    const weighRow = el(`<div class="row"><button class="btn" id="doWeigh">Weigh it</button></div>`);
+    stage.appendChild(weighRow);
+    document.getElementById('doWeigh').addEventListener('click', ()=>{
+      if(leftPan.length===0 || rightPan.length===0 || leftPan.length!==rightPan.length){
+        document.getElementById('scaleResult').textContent = 'Both pans need the same number of vials.';
+        return;
+      }
+      if(weighCount >= maxWeighings){
+        document.getElementById('scaleResult').textContent = 'No weighings left — make your accusation below.';
+        return;
+      }
+      weighCount++;
+      document.getElementById('weighCount').textContent = weighCount;
+      sfx.click();
+      const heavyInLeft = leftPan.includes(BALANCE_HEAVY_INDEX);
+      const heavyInRight = rightPan.includes(BALANCE_HEAVY_INDEX);
+      const lp = document.getElementById('leftPan'), rp = document.getElementById('rightPan');
+      lp.className = 'pan'; rp.className = 'pan';
+      let resultText;
+      if(heavyInLeft){ lp.classList.add('down'); rp.classList.add('up'); resultText = 'The left pan sinks.'; }
+      else if(heavyInRight){ rp.classList.add('down'); lp.classList.add('up'); resultText = 'The right pan sinks.'; }
+      else { resultText = 'Perfectly balanced. The fraud is not on the scale.'; }
+      document.getElementById('scaleResult').textContent = resultText;
+      leftPan = []; rightPan = [];
+      drawPool(); drawPans();
+      if(weighCount >= maxWeighings) document.getElementById('doWeigh').disabled = true;
+    });
+
+    const guessWrap = el(`<div style="margin-top:20px;">
+      <p>When you're certain, name the fraud:</p>
+      <div class="herb-select" id="guessRow">
+        ${vials.map(i=>`<button class="chip" data-i="${i}">#${i+1}</button>`).join('')}
+      </div>
+      <div class="row"><button class="btn" id="accuseBtn">Set it aside</button></div>
+      <div id="balanceFeedback2"></div>
+    </div>`);
+    stage.appendChild(guessWrap);
+    document.getElementById('guessRow').querySelectorAll('.chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        document.querySelectorAll('#guessRow .chip').forEach(c=>c.classList.remove('selected'));
+        chip.classList.add('selected');
+        finalGuess = parseInt(chip.dataset.i,10);
+        sfx.click();
+      });
+    });
+    document.getElementById('accuseBtn').addEventListener('click', ()=>{
+      const fb = document.getElementById('balanceFeedback2');
+      if(finalGuess === null){ fb.innerHTML = `<div class="feedback bad">Choose a vial first.</div>`; return; }
+      if(finalGuess === BALANCE_HEAVY_INDEX){
+        sfx.good();
+        fb.innerHTML = `<div class="feedback good">Vial #${finalGuess+1} — correct. Set aside and marked, before it could do harm.</div>`;
+        setTimeout(onDone, 900);
+      } else {
+        sfx.bad(); setVitals(-14);
+        fb.innerHTML = `<div class="feedback bad">Wrong vial. The scale doesn't lie — go back to what it told you. (-14 vital signs)</div>`;
+      }
+    });
+
+    const hintRow = el(`<div class="row"><button class="hint-btn" id="balHint">Consult the herbarium (-6 vital signs)</button></div>`);
+    stage.appendChild(hintRow);
+    document.getElementById('balHint').addEventListener('click', ()=>{
+      sfx.hint(); state.hintsUsed++; setVitals(-6);
+      stage.appendChild(el(`<div class="hint-box">Split the eight into three, three, and two. Weigh the two groups of three against each other first. If they balance, the fraud is in the leftover pair — weigh one of those against any vial you already know is genuine.</div>`));
+    });
+  };
+}
+
+function warrensRiddleScene(onDone){
+  return function(){
+    stage.innerHTML = '';
+    const wrap = el(`<div>
+      <h2 class="scene-title">Five Jars, One Truth</h2>
+      <p>Each jar carries a line the herbalist has written herself, riddle-style. Only one describes a plant that turns dangerous under heat — that's the Nightroot.</p>
+      <div class="herb-select" id="jarRow" style="flex-direction:column;align-items:stretch;">
+        ${WARRENS_JARS.map(j=>`<button class="chip" data-id="${j.id}" style="display:block;padding:12px 16px;"><strong>${j.label}</strong><br><span style="font-style:italic;color:var(--paper-dim);">${j.riddle}</span></button>`).join('')}
+      </div>
+      <div id="warrensFeedback"></div>
+    </div>`);
+    stage.appendChild(wrap);
+    let picked = null;
+    wrap.querySelectorAll('#jarRow .chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        wrap.querySelectorAll('#jarRow .chip').forEach(c=>c.classList.remove('selected'));
+        chip.classList.add('selected');
+        picked = chip.dataset.id;
+        sfx.click();
+      });
+    });
+    const row = el(`<div class="row"><button class="btn" id="warrensSubmit">Point to the jar</button></div>`);
+    stage.appendChild(row);
+    document.getElementById('warrensSubmit').addEventListener('click', ()=>{
+      const fb = document.getElementById('warrensFeedback');
+      if(picked === WARRENS_ANSWER){
+        sfx.good();
+        fb.innerHTML = `<div class="feedback good">The herbalist raises an eyebrow, almost impressed. "Fair enough."</div>`;
+        setTimeout(onDone, 900);
+      } else {
+        sfx.bad(); setVitals(-6);
+        fb.innerHTML = `<div class="feedback bad">Wrong jar. Only one riddle names heat itself as the danger. (-6 vital signs)</div>`;
+      }
+    });
+    const hintRow = el(`<div class="row"><button class="hint-btn" id="warrensHint">Consult the herbarium (-6 vital signs)</button></div>`);
+    stage.appendChild(hintRow);
+    document.getElementById('warrensHint').addEventListener('click', ()=>{
+      sfx.hint(); state.hintsUsed++; setVitals(-6);
+      stage.appendChild(el(`<div class="hint-box">Four of the five riddles are indifferent to heat, or even prefer it. Only one warns you away from fire specifically.</div>`));
+    });
+  };
+}
+
+/* =========================================================
+   SCENE ROUTER
+   ========================================================= */
+const SCENES = {
+  'title': sceneTitle,
+  'cold-open': sceneColdOpen,
+  'hub': sceneHub,
+  'village-intro': sceneVillageIntro,
+  'village-forage': sceneVillageForage,
+  'village-patients': sceneVillagePatients,
+  'village-outro': sceneVillageOutro,
+  'village-recap': ()=>leadRecap('village'),
+  'court-intro': sceneCourtIntro,
+  'court-deduce': sceneCourtDeduce,
+  'court-antidote': sceneCourtAntidote,
+  'court-brew': sceneCourtBrew,
+  'court-outro': sceneCourtOutro,
+  'court-recap': ()=>leadRecap('court'),
+  'archive-intro': sceneArchiveIntro,
+  'archive-cipher': sceneArchiveCipher,
+  'archive-balance': sceneArchiveBalance,
+  'archive-outro': sceneArchiveOutro,
+  'archive-recap': ()=>leadRecap('archive'),
+  'warrens-intro': sceneWarrensIntro,
+  'warrens-riddle': sceneWarrensRiddle,
+  'warrens-outro': sceneWarrensOutro,
+  'warrens-recap': ()=>leadRecap('warrens'),
+  'finale-intro': sceneFinaleIntro,
+  'finale-accuse': sceneFinaleAccuse,
+  'ending': sceneEnding
+};
+
+function render(){
+  const fn = SCENES[state.scene];
+  if(fn) fn(); else SCENES['hub']();
+}
+
+render();
+
+})();
+</script>
+</body>
+</html>

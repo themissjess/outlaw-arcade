@@ -18,5 +18,15 @@
     "metricLabel": "Fastest Clear",
     "sortDirection": "asc",
     "metricType": "seconds"
+  },
+  {
+    "slug": "root-and-ruin",
+    "title": "Root & Ruin",
+    "tagline": "Forage for herbs, brew cures, and save patients in a world fighting back against decay.",
+    "path": "games/root-and-ruin/index.html",
+    "accent": "linear-gradient(90deg,#5C8A4A,#8B5A9E)",
+    "metricLabel": "Fastest Clear",
+    "sortDirection": "asc",
+    "metricType": "seconds"
   }
 ]
