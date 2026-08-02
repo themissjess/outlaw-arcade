@@ -1066,6 +1066,7 @@ function balanceScene(onDone){
     const wrap = el(`<div>
       <h2 class="scene-title">The Swapped Vial</h2>
       <p>Eight vials, all labeled "Cure." One is a fraud — a slow poison, made just heavy enough that only a scale will tell. You have two weighings.</p>
+      <p class="dim" style="font-size:0.9rem;">Tap a vial below to place it on whichever pan is active. Tap a vial <em>already on a pan</em> to take it back off. "Clear pans" empties both at once.</p>
       <p class="dim">Weighings used: <span id="weighCount">0</span> / ${maxWeighings}</p>
       <div class="vial-pool" id="vialPool"></div>
       <div class="scale-wrap">
@@ -1097,8 +1098,23 @@ function balanceScene(onDone){
     }
     function drawPans(){
       const lp = document.getElementById('leftPan'), rp = document.getElementById('rightPan');
-      lp.innerHTML = leftPan.map(i=>`<div class="vial">#${i+1}</div>`).join('');
-      rp.innerHTML = rightPan.map(i=>`<div class="vial">#${i+1}</div>`).join('');
+      lp.innerHTML = ''; rp.innerHTML = '';
+      leftPan.forEach(i=>{
+        const v = document.createElement('button');
+        v.className = 'vial'; v.textContent = '#'+(i+1);
+        v.title = 'Take #'+(i+1)+' off the pan';
+        v.setAttribute('aria-label', 'Remove vial '+(i+1)+' from left pan');
+        v.addEventListener('click', ()=>{ leftPan = leftPan.filter(x=>x!==i); sfx.click(); drawPool(); drawPans(); });
+        lp.appendChild(v);
+      });
+      rightPan.forEach(i=>{
+        const v = document.createElement('button');
+        v.className = 'vial'; v.textContent = '#'+(i+1);
+        v.title = 'Take #'+(i+1)+' off the pan';
+        v.setAttribute('aria-label', 'Remove vial '+(i+1)+' from right pan');
+        v.addEventListener('click', ()=>{ rightPan = rightPan.filter(x=>x!==i); sfx.click(); drawPool(); drawPans(); });
+        rp.appendChild(v);
+      });
     }
     drawPool(); drawPans();
 
